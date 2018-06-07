@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
 
 import os, sys
@@ -27,6 +27,8 @@ target_metadata = model.Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+def get_uri():
+    return os.environ.get('POSTGRES_URI', config.get_main_option("sqlalchemy.url")) 
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -40,9 +42,8 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True)
+        url=get_uri(), target_metadata=target_metadata, literal_binds=True)
 
     with context.begin_transaction():
         context.run_migrations()
@@ -55,10 +56,7 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix='sqlalchemy.',
-        poolclass=pool.NullPool)
+    connectable = create_engine(get_uri())
 
     with connectable.connect() as connection:
         context.configure(

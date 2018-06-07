@@ -3,7 +3,7 @@ import logging
 from model import Chat, session_scope
 import config
 from datetime import datetime, timedelta
-
+import os
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -119,7 +119,7 @@ def on_successful_introduce(bot, update, job_queue):
 
 
 def main():
-    updater = Updater("610195297:AAGCT-nqdT3TDspTO2aip1-BGJ5y4Pmu4AE")
+    updater = Updater(os.environ['TELEGRAM_TOKEN'])
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("set_new_chat_member_message", on_set_new_chat_member_message,

@@ -19,8 +19,11 @@ class Chat(Base):
 
     def __repr__(self):
         return f"<Chat(id={self.id})>"
-        
-engine = create_engine('postgresql://localhost:5432/wi_bot', echo=False)
+
+def get_uri():
+    return os.environ.get('POSTGRES_URI', 'postgresql://localhost:5432/wi_bot') 
+
+engine = create_engine(get_uri(), echo=False)
 Session = sessionmaker(autoflush=True, bind=engine)
 
 @contextmanager
