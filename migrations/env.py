@@ -28,7 +28,7 @@ target_metadata = model.Base.metadata
 # ... etc.
 
 def get_uri():
-    return os.environ.get('POSTGRES_URI', config.get_main_option("sqlalchemy.url")) 
+    return os.environ.get('DATABASE_URL', config.get_main_option("sqlalchemy.url")) 
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
