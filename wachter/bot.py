@@ -1,7 +1,7 @@
 from telegram.ext import Updater, CommandHandler, Filters, MessageHandler
 import logging
 from model import Chat, session_scope
-import config
+import default_messages
 from datetime import datetime, timedelta
 import os
 
@@ -26,43 +26,60 @@ def on_set_new_chat_member_message(bot, update, args):
     chat_id = update.message.chat_id
     message = " ".join(args)
 
+    if not authorize_user(bot, update):
+        # update.message.reply_text(default_messages.on_failed_auth_response)
+        return
+
+    if message == '':
+        update.message.reply_text(default_messages.on_empty_message)
+        return
+
+
     with session_scope() as sess:
         chat = Chat(id=chat_id, on_new_chat_member_message=message)
         sess.merge(chat)
 
-    update.message.reply_text(config.on_set_new_chat_member_message_response)
+    update.message.reply_text(default_messages.on_set_new_chat_member_message_response)
 
 
 def on_set_introduce_message(bot, update, args):
     chat_id = update.message.chat_id
     message = " ".join(args)
 
+    if not authorize_user(bot, update):
+        # update.message.reply_text(default_messages.on_failed_auth_response)
+        return
+
+    if message == '':
+        update.message.reply_text(default_messages.on_empty_message)
+        return
+
     with session_scope() as sess:
         chat = Chat(id=chat_id, on_introduce_message=message)
         sess.merge(chat)
 
-    update.message.reply_text(config.on_set_introduce_message_response)
+    update.message.reply_text(default_messages.on_set_introduce_message_response)
 
 
 def on_set_kick_timeout(bot, update, args):
     chat_id = update.message.chat_id
 
     if not authorize_user(bot, update):
-        update.message.reply_text(config.on_failed_auth_response)
+        # update.message.reply_text(default_messages.on_failed_auth_response)
         return
 
     try:
         timeout = int(args[0])
         assert timeout >= 0
     except:
-        update.message.reply_text(config.on_failed_set_kick_timeout_response)
+        update.message.reply_text(default_messages.on_failed_set_kick_timeout_response)
         return
 
     with session_scope() as sess:
         chat = Chat(id=chat_id, kick_timeout=timeout)
         sess.merge(chat)
 
-    update.message.reply_text(config.on_success_set_kick_timeout_response)
+    update.message.reply_text(default_messages.on_success_set_kick_timeout_response)
 
 
 def on_new_chat_member(bot, update, job_queue):
@@ -94,7 +111,7 @@ def on_timeout(bot, job):
                              job.context["user_id"],
                              until_date=datetime.now() + timedelta(seconds=30))
     except:
-        bot.send_message(job.context['chat_id'], text=config.on_failed_kick_response)
+        bot.send_message(job.context['chat_id'], text=default_messages.on_failed_kick_response)
 
 
 def on_successful_introduce(bot, update, job_queue):

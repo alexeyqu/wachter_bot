@@ -21,7 +21,7 @@ class Chat(Base):
         return f"<Chat(id={self.id})>"
 
 def get_uri():
-    return os.environ.get('DATABASE_URL', 'postgresql://localhost:5432/wi_bot') 
+    return os.environ.get('DATABASE_URL', 'postgresql://localhost:5432/wachter') 
 
 engine = create_engine(get_uri(), echo=False)
 Session = sessionmaker(autoflush=True, bind=engine)

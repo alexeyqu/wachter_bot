@@ -19,7 +19,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from wi_bot import model
+from wachter import model
 target_metadata = model.Base.metadata
 
 # other values from the config, defined by the needs of env.py,

@@ -1,2 +1,2 @@
-# WhoIs bot
+# Wachter Telegram bot
 

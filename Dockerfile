@@ -10,4 +10,4 @@ RUN pipenv install --system
 COPY . /app
 WORKDIR /app
 
-CMD alembic upgrade head && python wi_bot/bot.py
+CMD alembic upgrade head && python wachter/bot.py
