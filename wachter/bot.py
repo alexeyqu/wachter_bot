@@ -34,12 +34,12 @@ def on_set_new_chat_member_message(bot, update, args):
         update.message.reply_text(default_messages.on_empty_message)
         return
 
-
     with session_scope() as sess:
         chat = Chat(id=chat_id, on_new_chat_member_message=message)
         sess.merge(chat)
 
-    update.message.reply_text(default_messages.on_set_new_chat_member_message_response)
+    update.message.reply_text(
+        default_messages.on_set_new_chat_member_message_response)
 
 
 def on_set_introduce_message(bot, update, args):
@@ -58,7 +58,8 @@ def on_set_introduce_message(bot, update, args):
         chat = Chat(id=chat_id, on_introduce_message=message)
         sess.merge(chat)
 
-    update.message.reply_text(default_messages.on_set_introduce_message_response)
+    update.message.reply_text(
+        default_messages.on_set_introduce_message_response)
 
 
 def on_set_kick_timeout(bot, update, args):
@@ -72,18 +73,26 @@ def on_set_kick_timeout(bot, update, args):
         timeout = int(args[0])
         assert timeout >= 0
     except:
-        update.message.reply_text(default_messages.on_failed_set_kick_timeout_response)
+        update.message.reply_text(
+            default_messages.on_failed_set_kick_timeout_response)
         return
 
     with session_scope() as sess:
         chat = Chat(id=chat_id, kick_timeout=timeout)
         sess.merge(chat)
 
-    update.message.reply_text(default_messages.on_success_set_kick_timeout_response)
+    update.message.reply_text(
+        default_messages.on_success_set_kick_timeout_response)
 
 
 def on_new_chat_member(bot, update, job_queue):
     chat_id = update.message.chat_id
+    user_id = update.message.new_chat_members[-1].id
+
+    for job in job_queue.jobs():
+        if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
+            job.enabled = False
+            job.schedule_removal()
 
     with session_scope() as sess:
         chat = sess.query(Chat).filter(Chat.id == chat_id).first()
@@ -99,7 +108,7 @@ def on_new_chat_member(bot, update, job_queue):
     if timeout != 0:
         job = job_queue.run_once(on_timeout, timeout * 60, context={
             "chat_id": chat_id,
-            "user_id": update.message.new_chat_members[-1].id
+            "user_id": user_id
         })
 
     update.message.reply_text(message)
@@ -111,7 +120,8 @@ def on_timeout(bot, job):
                              job.context["user_id"],
                              until_date=datetime.now() + timedelta(seconds=30))
     except:
-        bot.send_message(job.context['chat_id'], text=default_messages.on_failed_kick_response)
+        bot.send_message(
+            job.context['chat_id'], text=default_messages.on_failed_kick_response)
 
 
 def on_successful_introduce(bot, update, job_queue):
@@ -129,10 +139,15 @@ def on_successful_introduce(bot, update, job_queue):
 
             message = chat.on_introduce_message
 
+        removed = False
         for job in job_queue.jobs():
-            if job.context['user_id'] == user_id:
+            if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
+                job.enabled = False
                 job.schedule_removal()
-                update.message.reply_text(message)
+                removed = True
+
+        if removed:
+            update.message.reply_text(message)
 
 
 def main():
@@ -152,7 +167,7 @@ def main():
                                   pass_job_queue=True))
 
     dp.add_handler(MessageHandler(Filters.entity('hashtag'), on_successful_introduce,
-                                  pass_job_queue=True))
+                                  pass_job_queue=True, edited_updates=True))
 
     dp.add_error_handler(on_error)
 
