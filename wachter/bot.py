@@ -1,6 +1,6 @@
 from telegram.ext import Updater, CommandHandler, Filters, MessageHandler
 import logging
-from model import Chat, session_scope
+from model import Chat, User, session_scope
 import default_messages
 from datetime import datetime, timedelta
 import os
@@ -10,6 +10,9 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 logger = logging.getLogger(__name__)
 
+def on_error(bot, update, error):
+    logger.warning(f'Update "{update}" caused error "{error}"')
+
 
 def authorize_user(bot, update):
     chat_id = update.message.chat_id
@@ -17,10 +20,8 @@ def authorize_user(bot, update):
     status = bot.get_chat_member(chat_id, user_id).status
     return status in ['creator', 'administrator']
 
-
-def on_error(bot, update, error):
-    logger.warning(f'Update "{update}" caused error "{error}"')
-
+def on_help_command(bot, update):
+    update.message.reply_text(default_messages.help_message)
 
 def on_set_new_chat_member_message(bot, update, args):
     chat_id = update.message.chat_id
@@ -47,7 +48,6 @@ def on_set_introduce_message(bot, update, args):
     message = " ".join(args)
 
     if not authorize_user(bot, update):
-        # update.message.reply_text(default_messages.on_failed_auth_response)
         return
 
     if message == '':
@@ -66,7 +66,6 @@ def on_set_kick_timeout(bot, update, args):
     chat_id = update.message.chat_id
 
     if not authorize_user(bot, update):
-        # update.message.reply_text(default_messages.on_failed_auth_response)
         return
 
     try:
@@ -93,6 +92,13 @@ def on_new_chat_member(bot, update, job_queue):
         if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
             job.enabled = False
             job.schedule_removal()
+
+    with session_scope() as sess:
+        user = sess.query(User).filter(User.chat_id == chat_id, User.user_id == user_id).first()
+
+        if user is not None:
+            update.message.reply_text('welcome back')
+            return
 
     with session_scope() as sess:
         chat = sess.query(Chat).filter(Chat.id == chat_id).first()
@@ -139,6 +145,10 @@ def on_successful_introduce(bot, update, job_queue):
 
             message = chat.on_introduce_message
 
+        with session_scope() as sess:
+            user = User(chat_id=chat_id, user_id=user_id, whois=update.message.text)
+            sess.merge(user)
+
         removed = False
         for job in job_queue.jobs():
             if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
@@ -162,6 +172,8 @@ def main():
 
     dp.add_handler(CommandHandler("set_kick_timeout", on_set_kick_timeout,
                                   pass_args=True))
+
+    dp.add_handler(CommandHandler("wachter_help", on_help_command))
 
     dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, on_new_chat_member,
                                   pass_job_queue=True))

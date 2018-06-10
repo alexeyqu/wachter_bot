@@ -8,23 +8,37 @@ import os
 
 Base = declarative_base()
 
+
 class Chat(Base):
     __tablename__ = 'chats'
 
     id = Column(BigInteger, primary_key=True)
+
     on_new_chat_member_message = Column(Text, nullable=False, default='Introduce yourself')
     on_introduce_message = Column(Text, nullable=False, default='Welcome')
-    kick_timeout = Column(Integer, nullable=False, default=0)
 
+    kick_timeout = Column(Integer, nullable=False, default=0)
 
     def __repr__(self):
         return f"<Chat(id={self.id})>"
 
+
+class User(Base):
+    __tablename__ = 'users'
+
+    user_id = Column(BigInteger, primary_key=True)
+    chat_id = Column(BigInteger, primary_key=True)
+
+    whois = Column(Text, nullable=False)
+
+
 def get_uri():
-    return os.environ.get('DATABASE_URL', 'postgresql://localhost:5432/wachter') 
+    return os.environ.get('DATABASE_URL', 'postgresql://localhost:5432/wachter')
+
 
 engine = create_engine(get_uri(), echo=False)
 Session = sessionmaker(autoflush=True, bind=engine)
+
 
 @contextmanager
 def session_scope():

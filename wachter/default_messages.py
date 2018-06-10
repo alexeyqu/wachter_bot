@@ -8,3 +8,9 @@ on_failed_set_kick_timeout_response = '/set_timeout <minutes>'
 on_failed_kick_response = 'Я не справился.'
 
 on_empty_message = 'Сообщение не может быть пустым.'
+
+help_message = '''Команды:
+/set_new_chat_member_message - Установить сообщение для новых участников чата
+/set_introduce_message - Установить сообщение после успешного представления
+/set_kick_timeout - Установить таймаут в минутах на кик (0 -- не кикать)
+'''
