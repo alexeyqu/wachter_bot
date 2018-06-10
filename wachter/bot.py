@@ -1,4 +1,5 @@
 from telegram.ext import Updater, CommandHandler, Filters, MessageHandler
+import telegram
 import logging
 from model import Chat, User, session_scope
 import default_messages
@@ -112,7 +113,13 @@ def on_new_chat_member(bot, update, job_queue):
         timeout = chat.kick_timeout
 
     if timeout != 0:
-        job = job_queue.run_once(on_timeout, timeout * 60, context={
+        if timeout >= 10:
+            job = job_queue.run_once(on_notify_timeout, (timeout - 9) * 60, context={
+                "chat_id": chat_id,
+                "user_id": user_id
+            })
+
+        job = job_queue.run_once(on_kick_timeout, timeout * 60, context={
             "chat_id": chat_id,
             "user_id": user_id
         })
@@ -120,7 +127,17 @@ def on_new_chat_member(bot, update, job_queue):
     update.message.reply_text(message)
 
 
-def on_timeout(bot, job):
+def on_notify_timeout(bot, job):
+    user = bot.get_chat_member(job.context['chat_id'], job.context['user_id']).user
+
+    mention_markdown = user.mention_markdown()
+    bot.send_message(job.context['chat_id'],
+                     text=f'ping {mention_markdown}',
+                     parse_mode=telegram.ParseMode.MARKDOWN)
+
+
+
+def on_kick_timeout(bot, job):
     try:
         bot.kick_chat_member(job.context['chat_id'],
                              job.context["user_id"],
@@ -131,6 +148,9 @@ def on_timeout(bot, job):
 
 
 def on_successful_introduce(bot, update, job_queue):
+    if not update.message:
+        update.message = update.edited_message
+
     if "#whois" in update.message.parse_entities(types=['hashtag']).values():
         chat_id = update.message.chat_id
         user_id = update.message.from_user.id
