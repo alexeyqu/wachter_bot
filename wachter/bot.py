@@ -179,6 +179,22 @@ def on_successful_introduce(bot, update, job_queue):
         if removed:
             update.message.reply_text(message)
 
+def on_whois_command(bot, update, args):
+    if len(args) != 1:
+        update.message.reply_text("Usage: /whois <user_id>")
+
+    chat_id = update.message.chat_id
+    user_id = args[0] # TODO: Use username instead of user_id
+
+    with session_scope() as sess:
+        user = sess.query(User).filter(User.chat_id == chat_id, User.user_id == user_id).first()
+
+        if user is None:
+            update.message.reply_text('user not found')
+            return
+        
+        update.message.reply_text(f'whois: {user.whois}')
+
 
 def main():
     updater = Updater(os.environ['TELEGRAM_TOKEN'])
@@ -191,6 +207,9 @@ def main():
                                   pass_args=True))
 
     dp.add_handler(CommandHandler("set_kick_timeout", on_set_kick_timeout,
+                                  pass_args=True))
+
+    dp.add_handler(CommandHandler("whois", on_whois_command,
                                   pass_args=True))
 
     dp.add_handler(CommandHandler("wachter_help", on_help_command))
