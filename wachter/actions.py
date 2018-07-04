@@ -44,7 +44,7 @@ def on_new_chat_member(bot, update, job_queue):
             sess.commit()
 
         if user is not None:
-            update.message.reply_text('MESSAGE')  # TODO: Extract to model
+            update.message.reply_text(chat.on_known_new_chat_member_message)
             return
 
         message = chat.on_new_chat_member_message
@@ -69,9 +69,12 @@ def on_notify_timeout(bot, job):
     user = bot.get_chat_member(
         job.context['chat_id'], job.context['user_id']).user
 
+    with session_scope() as sess:
+        chat = sess.query(Chat).filter(Chat.id == chat_id).first()
+
     mention_markdown = user.mention_markdown()
     bot.send_message(job.context['chat_id'],
-                     text=f'ping {mention_markdown}',  # TODO: Extract to model
+                     text=chat.notify_message,
                      parse_mode=telegram.ParseMode.MARKDOWN)
 
 
@@ -158,7 +161,11 @@ def on_button_click(bot, update, user_data):
                                       chat_id=query.message.chat_id,
                                       message_id=query.message.message_id)
 
-    elif data['action'] in [Actions.set_on_new_chat_member_message_response, Actions.set_kick_timeout]:
+    elif data['action'] in [Actions.set_on_new_chat_member_message_response,
+                            Actions.set_kick_timeout,
+                            Actions.set_notify_message,
+                            Actions.set_on_known_new_chat_member_message_response,
+                            Actions.set_on_successful_introducion_response]:
         bot.edit_message_text(text="Отправьте новое значение",
                               chat_id=query.message.chat_id,
                               message_id=query.message.message_id)
@@ -189,11 +196,17 @@ def on_message(bot, update, user_data):
         user_data['action'] = None
         update.message.reply_text(constants.on_success_set_kick_timeout_response)
 
-    if action == Actions.set_on_new_chat_member_message_response:
+    else:
         message = update.message.text_markdown
-
         with session_scope() as sess:
-            chat = Chat(id=chat_id, on_new_chat_member_message=message)
+            if action == Actions.set_on_new_chat_member_message_response:
+                chat = Chat(id=chat_id, on_new_chat_member_message=message)
+            if action == Actions.set_on_known_new_chat_member_message_response:
+                chat = Chat(id=chat_id, on_known_new_chat_member_message=message)
+            if action == Actions.set_on_successful_introducion_response:
+                chat = Chat(id=chat_id, on_introduce_message=message)
+            if action == Actions.set_notify_message:
+                chat = Chat(id=chat_id, notify_message=message)
             sess.merge(chat)
 
         user_data['action'] = None

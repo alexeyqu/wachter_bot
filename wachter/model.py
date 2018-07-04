@@ -14,9 +14,10 @@ class Chat(Base):
 
     id = Column(BigInteger, primary_key=True)
 
-    on_new_chat_member_message = Column(Text, nullable=False, default='Introduce yourself')
-    on_introduce_message = Column(Text, nullable=False, default='Welcome')
-
+    on_new_chat_member_message = Column(Text, nullable=False, default='Представьтесь, пожалуйста')
+    on_known_new_chat_member_message = Column(Text, nullable=False, default='Добро пожаловать')
+    on_introduce_message = Column(Text, nullable=False, default='Добро пожаловать')
+    notify_message = Column(Text, nullable=False, default='Представьтесь, пожалуйста')
     kick_timeout = Column(Integer, nullable=False, default=0)
 
     def __repr__(self):
