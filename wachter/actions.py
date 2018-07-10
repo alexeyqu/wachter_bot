@@ -125,9 +125,16 @@ def on_successful_introduce(bot, update, job_queue):
 def on_start_command(bot, update, user_data):
     user_id = update.message.chat_id
 
+    if user_id < 0:
+        return
+
     with session_scope() as sess:
         users = sess.query(User).filter(User.user_id == user_id)
         user_chats = list(map(lambda x: x.chat_id, users))
+
+    if len(user_chats) == 0:
+        update.message.reply_text('У вас нет доступных чатов.')
+        return
 
     keyboard = [[InlineKeyboardButton(chat_id,
                                       callback_data=json.dumps({'chat_id': chat_id, 'action': Actions.select_chat}))]
