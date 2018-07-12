@@ -130,15 +130,16 @@ def on_start_command(bot, update, user_data):
 
     with session_scope() as sess:
         users = sess.query(User).filter(User.user_id == user_id)
-        user_chats = list(map(lambda x: x.chat_id, users))
+        user_chats = [{"title": bot.get_chat(x.chat_id).title or x.chat_id, "id": x.chat_id}
+                      for x in users]
 
     if len(user_chats) == 0:
         update.message.reply_text('У вас нет доступных чатов.')
         return
 
-    keyboard = [[InlineKeyboardButton(chat_id,
-                                      callback_data=json.dumps({'chat_id': chat_id, 'action': Actions.select_chat}))]
-                for chat_id in user_chats if authorize_user(bot, chat_id, user_id)]
+    keyboard = [[InlineKeyboardButton(chat['title'],
+                                      callback_data=json.dumps({'chat_id': chat['id'], 'action': Actions.select_chat}))]
+                for chat in user_chats if authorize_user(bot, chat['id'], user_id)]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text(constants.on_start_command, reply_markup=reply_markup)
