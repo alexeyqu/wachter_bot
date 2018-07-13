@@ -3,13 +3,14 @@ import logging
 import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime, timedelta
-from model import Chat, User, session_scope
+from model import Chat, User, session_scope, orm_to_dict
 from constants import Actions
 import constants
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 
 def on_error(bot, update, error):
@@ -162,6 +163,9 @@ def on_button_click(bot, update, user_data):
                 {'chat_id': selected_chat_id, 'action': Actions.set_on_successful_introducion_response}))],
             [InlineKeyboardButton('Изменить сообщение напоминания', callback_data=json.dumps(
                 {'chat_id': selected_chat_id, 'action': Actions.set_notify_message}))],
+            [InlineKeyboardButton('Получить текущие настройки', callback_data=json.dumps(
+                {'chat_id': selected_chat_id, 'action': Actions.get_current_settings}))],
+
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -179,6 +183,15 @@ def on_button_click(bot, update, user_data):
                               message_id=query.message.message_id)
         user_data["chat_id"] = data['chat_id']
         user_data['action'] = data['action']
+
+    elif data['action'] == Actions.get_current_settings:
+        with session_scope() as sess:
+            chat = sess.query(Chat).filter(Chat.id == data['chat_id']).first()
+            bot.send_message(
+                chat_id=query.message.chat_id,
+                text=constants.get_settings_message.format(**chat.__dict__),
+                parse_mode=telegram.ParseMode.MARKDOWN)
+        user_data['action'] = None
 
 
 def on_message(bot, update, user_data):
@@ -204,7 +217,10 @@ def on_message(bot, update, user_data):
         user_data['action'] = None
         update.message.reply_text(constants.on_success_set_kick_timeout_response)
 
-    else:
+    elif data['action'] in [Actions.set_on_new_chat_member_message_response,
+                            Actions.set_notify_message,
+                            Actions.set_on_known_new_chat_member_message_response,
+                            Actions.set_on_successful_introducion_response]:
         message = update.message.text_markdown
         with session_scope() as sess:
             if action == Actions.set_on_new_chat_member_message_response:

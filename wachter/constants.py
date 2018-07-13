@@ -12,6 +12,17 @@ help_message = '''Привет. Для начала работы добавь м
 Если нужно кикать, то установи таймаут кика в значение больше нуля.
 За 5 минут до кика я отправляю сообщение с напоминанием.
 '''
+get_settings_message = """
+Таймаут кика: {kick_timeout}
+---
+Сообщение для нового участника чата: {on_new_chat_member_message}
+---
+Сообщение при перезаходе в чат: {on_known_new_chat_member_message}
+---
+Сообщение после успешного представления: {on_introduce_message}
+---
+Сообщение предупреждения: {notify_message}
+"""
 
 default_kick_timeout = 0
 notify_delta = 5
@@ -25,3 +36,4 @@ class Actions(IntEnum):
     set_on_successful_introducion_response = auto()
     set_on_known_new_chat_member_message_response = auto()
     set_kick_timeout = auto()
+    get_current_settings = auto()

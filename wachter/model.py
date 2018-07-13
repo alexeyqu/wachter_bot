@@ -5,6 +5,7 @@ from sqlalchemy.orm.session import sessionmaker
 from contextlib import contextmanager
 import enum
 import os
+from sqlalchemy import inspect
 
 Base = declarative_base()
 
@@ -52,3 +53,6 @@ def session_scope():
         raise
     finally:
         session.close()
+
+def orm_to_dict(obj):
+    return obj._asdict()
