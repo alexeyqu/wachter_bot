@@ -12,7 +12,6 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
-
 def on_error(bot, update, error):
     logger.warning(f'Update "{update}" caused error "{error}"')
 
@@ -187,10 +186,10 @@ def on_button_click(bot, update, user_data):
     elif data['action'] == Actions.get_current_settings:
         with session_scope() as sess:
             chat = sess.query(Chat).filter(Chat.id == data['chat_id']).first()
-            bot.send_message(
-                chat_id=query.message.chat_id,
-                text=constants.get_settings_message.format(**chat.__dict__),
-                parse_mode=telegram.ParseMode.MARKDOWN)
+            bot.edit_message_text(text=constants.get_settings_message.format(**chat.__dict__),
+                                parse_mode=telegram.ParseMode.MARKDOWN,
+                                chat_id=query.message.chat_id,
+                                message_id=query.message.message_id)
         user_data['action'] = None
 
 
