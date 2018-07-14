@@ -156,6 +156,26 @@ def on_button_click(bot, update, user_data):
     query = update.callback_query
     data = json.loads(query.data)
 
+    if data['action'] == Actions.start_select_chat:
+        with session_scope() as sess:
+            user_id = query.from_user.id
+            users = sess.query(User).filter(User.user_id == user_id)
+            user_chats = [{"title": bot.get_chat(x.chat_id).title or x.chat_id, "id": x.chat_id}
+                          for x in users]
+
+        if len(user_chats) == 0:
+            update.message.reply_text('У вас нет доступных чатов.')
+            return
+
+        keyboard = [[InlineKeyboardButton(chat['title'],
+                                          callback_data=json.dumps({'chat_id': chat['id'], 'action': Actions.select_chat}))]
+                    for chat in user_chats if authorize_user(bot, chat['id'], user_id)]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        bot.edit_message_reply_markup(reply_markup=reply_markup,
+                                      chat_id=query.message.chat_id,
+                                      message_id=query.message.message_id)
+
     if data['action'] == Actions.select_chat:
         selected_chat_id = data['chat_id']
         keyboard = [
@@ -171,7 +191,6 @@ def on_button_click(bot, update, user_data):
                 {'chat_id': selected_chat_id, 'action': Actions.set_notify_message}))],
             [InlineKeyboardButton('Получить текущие настройки', callback_data=json.dumps(
                 {'chat_id': selected_chat_id, 'action': Actions.get_current_settings}))],
-
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -191,12 +210,22 @@ def on_button_click(bot, update, user_data):
         user_data['action'] = data['action']
 
     elif data['action'] == Actions.get_current_settings:
+        keyboard = [
+            [InlineKeyboardButton('К настройке чата', callback_data=json.dumps(
+                {'chat_id': data['chat_id'], 'action': Actions.select_chat})),
+             InlineKeyboardButton('К списку чатов', callback_data=json.dumps(
+                 {'action': Actions.start_select_chat}))],
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
         with session_scope() as sess:
             chat = sess.query(Chat).filter(Chat.id == data['chat_id']).first()
             bot.edit_message_text(text=constants.get_settings_message.format(**chat.__dict__),
                                   parse_mode=telegram.ParseMode.MARKDOWN,
                                   chat_id=query.message.chat_id,
-                                  message_id=query.message.message_id)
+                                  message_id=query.message.message_id,
+                                  reply_markup=reply_markup)
+
         user_data['action'] = None
 
 
@@ -221,12 +250,21 @@ def on_message(bot, update, user_data):
             chat = Chat(id=chat_id, kick_timeout=timeout)
             sess.merge(chat)
         user_data['action'] = None
-        update.message.reply_text(constants.on_success_set_kick_timeout_response)
 
-    elif data['action'] in [Actions.set_on_new_chat_member_message_response,
-                            Actions.set_notify_message,
-                            Actions.set_on_known_new_chat_member_message_response,
-                            Actions.set_on_successful_introducion_response]:
+        keyboard = [
+            [InlineKeyboardButton('К настройке чата', callback_data=json.dumps(
+                {'chat_id': chat_id, 'action': Actions.select_chat})),
+             InlineKeyboardButton('К списку чатов', callback_data=json.dumps(
+                 {'action': Actions.start_select_chat}))],
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text(constants.on_success_set_kick_timeout_response, reply_markup=reply_markup)
+
+    elif action in [Actions.set_on_new_chat_member_message_response,
+                    Actions.set_notify_message,
+                    Actions.set_on_known_new_chat_member_message_response,
+                    Actions.set_on_successful_introducion_response]:
         message = update.message.text_markdown
         with session_scope() as sess:
             if action == Actions.set_on_new_chat_member_message_response:
@@ -240,7 +278,16 @@ def on_message(bot, update, user_data):
             sess.merge(chat)
 
         user_data['action'] = None
-        update.message.reply_text(text=constants.on_set_new_message, parse_mode=telegram.ParseMode.MARKDOWN)
+
+        keyboard = [
+            [InlineKeyboardButton('К настройке чата', callback_data=json.dumps(
+                {'chat_id': chat_id, 'action': Actions.select_chat})),
+             InlineKeyboardButton('К списку чатов', callback_data=json.dumps(
+                 {'action': Actions.start_select_chat}))],
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text(constants.on_set_new_message, reply_markup=reply_markup)
 
 
 def on_whois_command(bot, update, args):

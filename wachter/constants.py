@@ -32,6 +32,7 @@ notify_delta = 5
 
 # ACTIONS
 class Actions(IntEnum):
+    start_select_chat = auto()
     select_chat = auto()
     set_on_new_chat_member_message_response = auto()
     set_notify_message = auto()
