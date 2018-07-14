@@ -50,24 +50,24 @@ def on_new_chat_member(bot, update, job_queue):
         message = chat.on_new_chat_member_message
         timeout = chat.kick_timeout
 
+    msg = update.message.reply_text(message)
+
     if timeout != 0:
         if timeout >= 10:
-            job = job_queue.run_once(on_notify_timeout, (timeout - 9) * 60, context={
+            job = job_queue.run_once(on_notify_timeout, (timeout - constants.notify_delta) * 60, context={
                 "chat_id": chat_id,
                 "user_id": user_id
             })
 
         job = job_queue.run_once(on_kick_timeout, timeout * 60, context={
             "chat_id": chat_id,
-            "user_id": user_id
+            "user_id": user_id,
+            "message_id": msg.message_id
         })
-
-    update.message.reply_text(message)
 
 
 def on_notify_timeout(bot, job):
-    user = bot.get_chat_member(
-        job.context['chat_id'], job.context['user_id']).user
+    user = bot.get_chat_member(job.context['chat_id'], job.context['user_id']).user
 
     with session_scope() as sess:
         chat = sess.query(Chat).filter(Chat.id == chat_id).first()
@@ -83,9 +83,12 @@ def on_kick_timeout(bot, job):
         bot.kick_chat_member(job.context['chat_id'],
                              job.context["user_id"],
                              until_date=datetime.now() + timedelta(seconds=30))
+        try:
+            bot.delete_message(job.context['chat_id'], job.context['message_id'])
+        except:
+            pass
     except:
-        bot.send_message(
-            job.context['chat_id'], text=constants.on_failed_kick_response)
+        bot.send_message(job.context['chat_id'], text=constants.on_failed_kick_response)
 
 
 def on_successful_introduce(bot, update, job_queue):
@@ -114,6 +117,10 @@ def on_successful_introduce(bot, update, job_queue):
         removed = False
         for job in job_queue.jobs():
             if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
+                try:
+                    bot.delete_message(job.context['chat_id'], job.context['message_id'])
+                except:
+                    pass
                 job.enabled = False
                 job.schedule_removal()
                 removed = True
@@ -187,9 +194,9 @@ def on_button_click(bot, update, user_data):
         with session_scope() as sess:
             chat = sess.query(Chat).filter(Chat.id == data['chat_id']).first()
             bot.edit_message_text(text=constants.get_settings_message.format(**chat.__dict__),
-                                parse_mode=telegram.ParseMode.MARKDOWN,
-                                chat_id=query.message.chat_id,
-                                message_id=query.message.message_id)
+                                  parse_mode=telegram.ParseMode.MARKDOWN,
+                                  chat_id=query.message.chat_id,
+                                  message_id=query.message.message_id)
         user_data['action'] = None
 
 
