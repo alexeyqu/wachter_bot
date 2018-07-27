@@ -82,7 +82,7 @@ def on_kick_timeout(bot, job):
     try:
         bot.kick_chat_member(job.context['chat_id'],
                              job.context["user_id"],
-                             until_date=datetime.now() + timedelta(seconds=30))
+                             until_date=datetime.now() + timedelta(seconds=60))
         try:
             bot.delete_message(job.context['chat_id'], job.context['message_id'])
         except:
@@ -230,12 +230,18 @@ def on_button_click(bot, update, user_data):
 
 
 def on_message(bot, update, user_data):
-    chat_id = user_data["chat_id"]
+    user_id = update.message.chat_id
+
+    if user_id < 0:
+        return
+
     action = user_data.get('action')
 
     if action is None:
         return
 
+    chat_id = user_data["chat_id"]
+    
     if action == Actions.set_kick_timeout:
         message = update.message.text
         try:
