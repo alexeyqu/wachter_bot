@@ -50,7 +50,7 @@ def on_new_chat_member(bot, update, job_queue):
         message = chat.on_new_chat_member_message
         timeout = chat.kick_timeout
 
-    msg = update.message.reply_text(message)
+    msg = update.message.reply_text(message, parse_mode=telegram.ParseMode.MARKDOWN)
 
     if timeout != 0:
         if timeout >= 10:
