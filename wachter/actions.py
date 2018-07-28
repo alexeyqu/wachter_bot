@@ -72,10 +72,10 @@ def on_notify_timeout(bot, job):
     with session_scope() as sess:
         chat = sess.query(Chat).filter(Chat.id == job.context['chat_id']).first()
 
-    mention_markdown = user.mention_markdown()
-    bot.send_message(job.context['chat_id'],
-                     text=f"{mention_markdown} {chat.notify_message}",
-                     parse_mode=telegram.ParseMode.MARKDOWN)
+        mention_markdown = user.mention_markdown()
+        bot.send_message(job.context['chat_id'],
+                        text=f"{mention_markdown} {chat.notify_message}",
+                        parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def on_kick_timeout(bot, job):
