@@ -5,6 +5,7 @@ on_set_new_message = 'Обновил сообщение.'
 on_success_set_kick_timeout_response = 'Обновил таймаут кика.'
 on_failed_set_kick_timeout_response = 'Таймаут должен быть целым положительным числом'
 on_failed_kick_response = 'Я не справился.'
+on_success_kick_response = "не представился и был кикнут из чата."
 on_start_command = 'Выберите чат и действие:'
 
 help_message = '''Привет. Для начала работы добавь меня в чат.

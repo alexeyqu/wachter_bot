@@ -24,7 +24,6 @@ def authorize_user(bot, chat_id, user_id):
 def on_help_command(bot, update):
     update.message.reply_text(constants.help_message)
 
-
 def on_new_chat_member(bot, update, job_queue):
     chat_id = update.message.chat_id
     user_id = update.message.new_chat_members[-1].id
@@ -87,6 +86,12 @@ def on_kick_timeout(bot, job):
             bot.delete_message(job.context['chat_id'], job.context['message_id'])
         except:
             pass
+
+        user = bot.get_chat_member(job.context['chat_id'], job.context['user_id']).user
+        mention_markdown = user.mention_markdown()
+        bot.send_message(job.context['chat_id'],
+                        text=f"{mention_markdown} {constants.on_success_kick_response}",
+                        parse_mode=telegram.ParseMode.MARKDOWN)
     except:
         bot.send_message(job.context['chat_id'], text=constants.on_failed_kick_response)
 
