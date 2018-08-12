@@ -96,14 +96,15 @@ def delete_message(bot, job):
 
 def on_kick_timeout(bot, job):
     try:
+        bot.delete_message(
+            job.context['chat_id'], job.context['message_id'])
+    except:
+        pass
+
+    try:
         bot.kick_chat_member(job.context['chat_id'],
                              job.context["user_id"],
                              until_date=datetime.now() + timedelta(seconds=60))
-        try:
-            bot.delete_message(
-                job.context['chat_id'], job.context['message_id'])
-        except:
-            pass
 
         user = bot.get_chat_member(
             job.context['chat_id'], job.context['user_id']).user
