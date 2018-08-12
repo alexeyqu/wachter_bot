@@ -24,6 +24,7 @@ def authorize_user(bot, chat_id, user_id):
 def on_help_command(bot, update):
     update.message.reply_text(constants.help_message)
 
+
 def on_new_chat_member(bot, update, job_queue):
     chat_id = update.message.chat_id
     user_id = update.message.new_chat_members[-1].id
@@ -55,7 +56,8 @@ def on_new_chat_member(bot, update, job_queue):
         if timeout >= 10:
             job = job_queue.run_once(on_notify_timeout, (timeout - constants.notify_delta) * 60, context={
                 "chat_id": chat_id,
-                "user_id": user_id
+                "user_id": user_id,
+                "job_queue": job_queue
             })
 
         job = job_queue.run_once(on_kick_timeout, timeout * 60, context={
@@ -66,15 +68,30 @@ def on_new_chat_member(bot, update, job_queue):
 
 
 def on_notify_timeout(bot, job):
-    user = bot.get_chat_member(job.context['chat_id'], job.context['user_id']).user
+    user = bot.get_chat_member(
+        job.context['chat_id'], job.context['user_id']).user
 
     with session_scope() as sess:
-        chat = sess.query(Chat).filter(Chat.id == job.context['chat_id']).first()
+        chat = sess.query(Chat).filter(
+            Chat.id == job.context['chat_id']).first()
 
         mention_markdown = user.mention_markdown()
-        bot.send_message(job.context['chat_id'],
+        message = bot.send_message(job.context['chat_id'],
                         text=f"{mention_markdown} {chat.notify_message}",
                         parse_mode=telegram.ParseMode.MARKDOWN)
+
+        job.context['job_queue'].run_once(delete_message, constants.notify_delta * 60, context={
+            "chat_id": job.context['chat_id'],
+            "user_id": job.context['user_id'],
+            "message_id": message.message_id
+        })
+
+
+def delete_message(bot, job):
+    try:
+        bot.delete_message(job.context['chat_id'], job.context['message_id'])
+    except:
+        print(f"can't delete {job.context['message_id']} from {job.context['chat_id']}")
 
 
 def on_kick_timeout(bot, job):
@@ -83,17 +100,20 @@ def on_kick_timeout(bot, job):
                              job.context["user_id"],
                              until_date=datetime.now() + timedelta(seconds=60))
         try:
-            bot.delete_message(job.context['chat_id'], job.context['message_id'])
+            bot.delete_message(
+                job.context['chat_id'], job.context['message_id'])
         except:
             pass
 
-        user = bot.get_chat_member(job.context['chat_id'], job.context['user_id']).user
+        user = bot.get_chat_member(
+            job.context['chat_id'], job.context['user_id']).user
         mention_markdown = user.mention_markdown()
         bot.send_message(job.context['chat_id'],
                         text=f"{mention_markdown} {constants.on_success_kick_response}",
                         parse_mode=telegram.ParseMode.MARKDOWN)
     except:
-        bot.send_message(job.context['chat_id'], text=constants.on_failed_kick_response)
+        bot.send_message(job.context['chat_id'],
+                         text=constants.on_failed_kick_response)
 
 
 def on_successful_introduce(bot, update, job_queue):
@@ -123,7 +143,8 @@ def on_successful_introduce(bot, update, job_queue):
         for job in job_queue.jobs():
             if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
                 try:
-                    bot.delete_message(job.context['chat_id'], job.context['message_id'])
+                    bot.delete_message(
+                        job.context['chat_id'], job.context['message_id'])
                 except:
                     pass
                 job.enabled = False
