@@ -6,6 +6,7 @@ on_success_set_kick_timeout_response = 'Обновил таймаут кика.'
 on_failed_set_kick_timeout_response = 'Таймаут должен быть целым положительным числом'
 on_failed_kick_response = 'Я не справился.'
 on_failed_skip = 'Ответьте на сообщение пользователя которого не нужно кикать'
+on_success_skip = 'Теперь пользователю не нужно представляться.'
 on_success_kick_response = "не представился и был кикнут из чата."
 on_start_command = 'Выберите чат и действие:'
 
@@ -41,4 +42,5 @@ class Actions(IntEnum):
     set_on_successful_introducion_response = auto()
     set_on_known_new_chat_member_message_response = auto()
     set_kick_timeout = auto()
+    set_regex_filter = auto()
     get_current_settings = auto()
