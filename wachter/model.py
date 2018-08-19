@@ -20,6 +20,7 @@ class Chat(Base):
     on_introduce_message = Column(Text, nullable=False, default='Добро пожаловать.')
     on_kick_message = Column(Text, nullable=False, default='%USER\_MENTION% молчит и покидает чат')
     notify_message = Column(Text, nullable=False, default='%USER\_MENTION%, пожалуйста, представьтесь и поздоровайтесь с сообществом.')
+    regex_filter = Column(Text, nullable=True)
     kick_timeout = Column(Integer, nullable=False, default=0)
 
     def __repr__(self):

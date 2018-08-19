@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from model import Chat, User, session_scope, orm_to_dict
 from constants import Actions
 import constants
+import re
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -85,6 +86,9 @@ def on_new_chat_member(bot, update, job_queue):
         message = chat.on_new_chat_member_message
         timeout = chat.kick_timeout
 
+    if message == constants.skip_on_new_chat_member_message:
+        return 
+        
     message_markdown = mention_markdown(bot, chat_id, user_id, message)
     msg = update.message.reply_text(message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
 
@@ -249,6 +253,10 @@ def on_button_click(bot, update, user_data):
                 {'chat_id': selected_chat_id, 'action': Actions.set_on_successful_introducion_response}))],
             [InlineKeyboardButton('Изменить сообщение напоминания', callback_data=json.dumps(
                 {'chat_id': selected_chat_id, 'action': Actions.set_notify_message}))],
+            [InlineKeyboardButton('Изменить сообщение после кика', callback_data=json.dumps(
+                {'chat_id': selected_chat_id, 'action': Actions.set_on_kick_message}))],
+            [InlineKeyboardButton('Изменить regex для фильтра сообщений', callback_data=json.dumps(
+                {'chat_id': selected_chat_id, 'action': Actions.set_regex_filter}))],
             [InlineKeyboardButton('Получить текущие настройки', callback_data=json.dumps(
                 {'chat_id': selected_chat_id, 'action': Actions.get_current_settings}))],
         ]
@@ -262,7 +270,9 @@ def on_button_click(bot, update, user_data):
                             Actions.set_kick_timeout,
                             Actions.set_notify_message,
                             Actions.set_on_known_new_chat_member_message_response,
-                            Actions.set_on_successful_introducion_response]:
+                            Actions.set_on_successful_introducion_response,
+                            Actions.set_on_kick_message,
+                            Actions.set_regex_filter]:
         bot.edit_message_text(text="Отправьте новое значение",
                               chat_id=query.message.chat_id,
                               message_id=query.message.message_id)
@@ -288,13 +298,31 @@ def on_button_click(bot, update, user_data):
 
         user_data['action'] = None
 
+def filter_message(chat_id, message):
+    with session_scope() as sess:
+        chat = sess.query(Chat).filter(Chat.id == chat_id).first()
+
+        if chat.regex_filter is None:
+            return False
+        else:
+            return re.search(chat.regex_filter, message)
+
 
 def on_message(bot, update, user_data):
-    user_id = update.message.chat_id
+    chat_id = update.message.chat_id
 
-    if user_id < 0:
-        return
+    if chat_id < 0:
+        user_id = update.message.from_user.id
+        if not authorize_user(bot, chat_id, user_id) and filter_message(chat_id, update.message.text):
+            bot.delete_message(chat_id, update.message.message_id)
+            message_markdown = mention_markdown(bot, chat_id, user_id, constants.on_filtered_message)
 
+            message = bot.send_message(chat_id,
+                        text=message_markdown,
+                        parse_mode=telegram.ParseMode.MARKDOWN)
+            bot.kick_chat_member(chat_id,user_id)
+
+    user_id = chat_id
     action = user_data.get('action')
 
     if action is None:
@@ -330,7 +358,9 @@ def on_message(bot, update, user_data):
     elif action in [Actions.set_on_new_chat_member_message_response,
                     Actions.set_notify_message,
                     Actions.set_on_known_new_chat_member_message_response,
-                    Actions.set_on_successful_introducion_response]:
+                    Actions.set_on_successful_introducion_response,
+                    Actions.set_on_kick_message,
+                    Actions.set_regex_filter]:
         message = update.message.text_markdown
         with session_scope() as sess:
             if action == Actions.set_on_new_chat_member_message_response:
@@ -341,6 +371,14 @@ def on_message(bot, update, user_data):
                 chat = Chat(id=chat_id, on_introduce_message=message)
             if action == Actions.set_notify_message:
                 chat = Chat(id=chat_id, notify_message=message)
+            if action == Actions.set_on_kick_message:
+                chat = Chat(id=chat_id, on_kick_message=message)
+            if action == Actions.set_regex_filter:
+                if message == "%TURN_OFF%":
+                    chat = Chat(id=chat_id, regex_filter=None)
+                else:
+                    message = update.message.text
+                    chat = Chat(id=chat_id, regex_filter=message)
             sess.merge(chat)
 
         user_data['action'] = None
