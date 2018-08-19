@@ -24,6 +24,32 @@ def authorize_user(bot, chat_id, user_id):
 def on_help_command(bot, update):
     update.message.reply_text(constants.help_message)
 
+def on_skip_command(bot, update, job_queue):
+    chat_id = update.message.chat_id
+
+    if chat_id > 0:
+        return
+
+    if not update.message:
+        update.message = update.edited_message
+
+    if update.message.reply_to_message is not None:
+        user_id = update.message.reply_to_message.from_user.id
+        
+        if not authorize_user(bot, chat_id, user_id):
+            return
+
+        for job in job_queue.jobs():
+            if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
+                try:
+                    bot.delete_message(
+                        job.context['chat_id'], job.context['message_id'])
+                except:
+                    pass
+                job.enabled = False
+                job.schedule_removal()
+    else:
+        update.message.reply_text(constants.on_failed_skip)
 
 def on_new_chat_member(bot, update, job_queue):
     chat_id = update.message.chat_id

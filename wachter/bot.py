@@ -16,6 +16,7 @@ def main():
                                   pass_job_queue=True, edited_updates=True))
 
     dp.add_handler(CommandHandler('start', actions.on_start_command, pass_user_data=True))
+    dp.add_handler(CommandHandler('skip', actions.on_skip_command, allow_edited=True, pass_job_queue=True))
     dp.add_handler(CallbackQueryHandler(actions.on_button_click, pass_user_data=True))
     dp.add_handler(MessageHandler(Filters.text, actions.on_message, pass_user_data=True))
 
