@@ -144,7 +144,11 @@ def on_kick_timeout(bot, job):
                              job.context["user_id"],
                              until_date=datetime.now() + timedelta(seconds=60))
 
-        message_markdown = mention_markdown(bot, job.context['chat_id'], job.context['user_id'], constants.on_success_kick_response)
+        with session_scope() as sess:
+            chat = sess.query(Chat).filter(
+                Chat.id == job.context['chat_id']).first()
+            message_markdown = mention_markdown(bot, job.context['chat_id'], job.context['user_id'], chat.on_kick_message)
+
         bot.send_message(job.context['chat_id'],
                         text=message_markdown,
                         parse_mode=telegram.ParseMode.MARKDOWN)
