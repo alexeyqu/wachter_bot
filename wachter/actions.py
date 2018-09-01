@@ -194,7 +194,7 @@ def on_successful_introduce(bot, update, job_queue):
 
         if removed:
             message_markdown = mention_markdown(bot, chat_id, user_id, message)
-            update.message.reply_text(message_markdown)
+            update.message.reply_text(message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def on_start_command(bot, update, user_data):
