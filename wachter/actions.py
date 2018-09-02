@@ -312,7 +312,7 @@ def filter_message(chat_id, message):
             return re.search(chat.regex_filter, message)
 
 
-def on_message(bot, update, user_data):
+def on_message(bot, update, user_data, job_queue):
     chat_id = update.message.chat_id
 
     if chat_id < 0:
@@ -320,7 +320,15 @@ def on_message(bot, update, user_data):
         if not authorize_user(bot, chat_id, user_id) and filter_message(chat_id, update.message.text):
             bot.delete_message(chat_id, update.message.message_id)
             message_markdown = mention_markdown(bot, chat_id, user_id, constants.on_filtered_message)
-
+            for job in job_queue.jobs():
+                if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
+                    try:
+                        bot.delete_message(
+                            job.context['chat_id'], job.context['message_id'])
+                    except:
+                        pass
+                    job.enabled = False
+                    job.schedule_removal()
             message = bot.send_message(chat_id,
                         text=message_markdown,
                         parse_mode=telegram.ParseMode.MARKDOWN)
