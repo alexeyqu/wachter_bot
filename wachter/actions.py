@@ -412,12 +412,13 @@ def on_whois_command(bot, update, args):
 
     chat_id = update.message.chat_id
     user_id = args[0]  # TODO: Use username instead of user_id
-
+    
+    user = None
     with session_scope() as sess:
         user = sess.query(User).filter(User.chat_id == chat_id, User.user_id == user_id).first()
 
-        if user is None:
-            update.message.reply_text('user not found')
-            return
+    if user is None:
+        update.message.reply_text('user not found')
+        return
 
-        update.message.reply_text(f'whois: {user.whois}')
+    update.message.reply_text(f'whois: {user.whois}')
