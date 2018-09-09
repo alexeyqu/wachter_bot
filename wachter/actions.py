@@ -21,6 +21,7 @@ def authorize_user(bot, chat_id, user_id):
     status = bot.get_chat_member(chat_id, user_id).status
     return status in ['creator', 'administrator']
 
+
 def mention_markdown(bot, chat_id, user_id, message):
     user = bot.get_chat_member(chat_id, user_id).user
     user_mention_markdown = user.mention_markdown()
@@ -28,8 +29,10 @@ def mention_markdown(bot, chat_id, user_id, message):
     # \ нужны из-за формата сообщений в маркдауне
     return message.replace('%USER\_MENTION%', user_mention_markdown)
 
+
 def on_help_command(bot, update):
     update.message.reply_text(constants.help_message)
+
 
 def on_skip_command(bot, update, job_queue):
     chat_id = update.message.chat_id
@@ -61,6 +64,7 @@ def on_skip_command(bot, update, job_queue):
     else:
         update.message.reply_text(constants.on_failed_skip)
 
+
 def on_new_chat_member(bot, update, job_queue):
     chat_id = update.message.chat_id
     user_id = update.message.new_chat_members[-1].id
@@ -71,7 +75,8 @@ def on_new_chat_member(bot, update, job_queue):
             job.schedule_removal()
 
     with session_scope() as sess:
-        user = sess.query(User).filter(User.chat_id == chat_id, User.user_id == user_id).first()
+        user = sess.query(User).filter(
+            User.chat_id == chat_id, User.user_id == user_id).first()
         chat = sess.query(Chat).filter(Chat.id == chat_id).first()
 
         if chat is None:
@@ -87,10 +92,11 @@ def on_new_chat_member(bot, update, job_queue):
         timeout = chat.kick_timeout
 
     if message == constants.skip_on_new_chat_member_message:
-        return 
-        
+        return
+
     message_markdown = mention_markdown(bot, chat_id, user_id, message)
-    msg = update.message.reply_text(message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
+    msg = update.message.reply_text(
+        message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
 
     if timeout != 0:
         if timeout >= 10:
@@ -112,11 +118,12 @@ def on_notify_timeout(bot, job):
         chat = sess.query(Chat).filter(
             Chat.id == job.context['chat_id']).first()
 
-        message_markdown = mention_markdown(bot, job.context['chat_id'], job.context['user_id'], chat.notify_message)
+        message_markdown = mention_markdown(
+            bot, job.context['chat_id'], job.context['user_id'], chat.notify_message)
 
         message = bot.send_message(job.context['chat_id'],
-                        text=message_markdown,
-                        parse_mode=telegram.ParseMode.MARKDOWN)
+                                   text=message_markdown,
+                                   parse_mode=telegram.ParseMode.MARKDOWN)
 
         job.context['job_queue'].run_once(delete_message, constants.notify_delta * 60, context={
             "chat_id": job.context['chat_id'],
@@ -147,11 +154,12 @@ def on_kick_timeout(bot, job):
         with session_scope() as sess:
             chat = sess.query(Chat).filter(
                 Chat.id == job.context['chat_id']).first()
-            message_markdown = mention_markdown(bot, job.context['chat_id'], job.context['user_id'], chat.on_kick_message)
+            message_markdown = mention_markdown(
+                bot, job.context['chat_id'], job.context['user_id'], chat.on_kick_message)
 
         bot.send_message(job.context['chat_id'],
-                        text=message_markdown,
-                        parse_mode=telegram.ParseMode.MARKDOWN)
+                         text=message_markdown,
+                         parse_mode=telegram.ParseMode.MARKDOWN)
     except:
         bot.send_message(job.context['chat_id'],
                          text=constants.on_failed_kick_response)
@@ -194,7 +202,8 @@ def on_successful_introduce(bot, update, job_queue):
 
         if removed:
             message_markdown = mention_markdown(bot, chat_id, user_id, message)
-            update.message.reply_text(message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
+            update.message.reply_text(
+                message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def on_start_command(bot, update, user_data):
@@ -217,7 +226,8 @@ def on_start_command(bot, update, user_data):
                 for chat in user_chats if authorize_user(bot, chat['id'], user_id)]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text(constants.on_start_command, reply_markup=reply_markup)
+    update.message.reply_text(
+        constants.on_start_command, reply_markup=reply_markup)
 
 
 def on_button_click(bot, update, user_data):
@@ -302,6 +312,7 @@ def on_button_click(bot, update, user_data):
 
         user_data['action'] = None
 
+
 def filter_message(chat_id, message):
     with session_scope() as sess:
         chat = sess.query(Chat).filter(Chat.id == chat_id).first()
@@ -312,14 +323,52 @@ def filter_message(chat_id, message):
             return re.search(chat.regex_filter, message)
 
 
+def on_forward(bot, update, job_queue):
+    chat_id = update.message.chat_id
+    user_id = update.message.from_user.id
+    removed = False
+
+    if chat_id < 0 and not authorize_user(bot, chat_id, user_id):
+        with session_scope() as sess:
+            chat = sess.query(Chat).filter(
+                Chat.id == chat_id == chat_id).first()
+            if chat.regex_filter is None:
+                return
+
+        for job in job_queue.jobs():
+            if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
+                removed = True
+                try:
+                    bot.delete_message(
+                        job.context['chat_id'], job.context['message_id'])
+                except:
+                    pass
+                job.enabled = False
+                job.schedule_removal()
+
+        if removed:
+            bot.delete_message(chat_id, update.message.message_id)
+            message_markdown = mention_markdown(
+                bot, chat_id, user_id, constants.on_filtered_message)
+            message = bot.send_message(chat_id,
+                                       text=message_markdown,
+                                       parse_mode=telegram.ParseMode.MARKDOWN)
+            bot.kick_chat_member(chat_id, user_id)
+
+
 def on_message(bot, update, user_data, job_queue):
     chat_id = update.message.chat_id
 
     if chat_id < 0:
         user_id = update.message.from_user.id
+        if update.message.forward_from:
+            on_forward(bot, update, job_queue)
+            return
+
         if not authorize_user(bot, chat_id, user_id) and filter_message(chat_id, update.message.text):
             bot.delete_message(chat_id, update.message.message_id)
-            message_markdown = mention_markdown(bot, chat_id, user_id, constants.on_filtered_message)
+            message_markdown = mention_markdown(
+                bot, chat_id, user_id, constants.on_filtered_message)
             for job in job_queue.jobs():
                 if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
                     try:
@@ -330,9 +379,9 @@ def on_message(bot, update, user_data, job_queue):
                     job.enabled = False
                     job.schedule_removal()
             message = bot.send_message(chat_id,
-                        text=message_markdown,
-                        parse_mode=telegram.ParseMode.MARKDOWN)
-            bot.kick_chat_member(chat_id,user_id)
+                                       text=message_markdown,
+                                       parse_mode=telegram.ParseMode.MARKDOWN)
+            bot.kick_chat_member(chat_id, user_id)
 
     user_id = chat_id
     action = user_data.get('action')
@@ -341,7 +390,7 @@ def on_message(bot, update, user_data, job_queue):
         return
 
     chat_id = user_data["chat_id"]
-    
+
     if action == Actions.set_kick_timeout:
         message = update.message.text
         try:
@@ -365,7 +414,8 @@ def on_message(bot, update, user_data, job_queue):
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
-        update.message.reply_text(constants.on_success_set_kick_timeout_response, reply_markup=reply_markup)
+        update.message.reply_text(
+            constants.on_success_set_kick_timeout_response, reply_markup=reply_markup)
 
     elif action in [Actions.set_on_new_chat_member_message_response,
                     Actions.set_notify_message,
@@ -378,7 +428,8 @@ def on_message(bot, update, user_data, job_queue):
             if action == Actions.set_on_new_chat_member_message_response:
                 chat = Chat(id=chat_id, on_new_chat_member_message=message)
             if action == Actions.set_on_known_new_chat_member_message_response:
-                chat = Chat(id=chat_id, on_known_new_chat_member_message=message)
+                chat = Chat(
+                    id=chat_id, on_known_new_chat_member_message=message)
             if action == Actions.set_on_successful_introducion_response:
                 chat = Chat(id=chat_id, on_introduce_message=message)
             if action == Actions.set_notify_message:
@@ -403,7 +454,8 @@ def on_message(bot, update, user_data, job_queue):
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
-        update.message.reply_text(constants.on_set_new_message, reply_markup=reply_markup)
+        update.message.reply_text(
+            constants.on_set_new_message, reply_markup=reply_markup)
 
 
 def on_whois_command(bot, update, args):
@@ -414,7 +466,8 @@ def on_whois_command(bot, update, args):
     user_id = args[0]  # TODO: Use username instead of user_id
 
     with session_scope() as sess:
-        user = sess.query(User).filter(User.chat_id == chat_id, User.user_id == user_id).first()
+        user = sess.query(User).filter(
+            User.chat_id == chat_id, User.user_id == user_id).first()
 
         if user is None:
             update.message.reply_text('user not found')
