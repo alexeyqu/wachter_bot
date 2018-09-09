@@ -353,7 +353,7 @@ def on_forward(bot, update, job_queue):
             message = bot.send_message(chat_id,
                                        text=message_markdown,
                                        parse_mode=telegram.ParseMode.MARKDOWN)
-            bot.kick_chat_member(chat_id, user_id)
+            bot.kick_chat_member(chat_id, user_id, until_date=datetime.now() + timedelta(seconds=60))
 
 
 def on_message(bot, update, user_data, job_queue):
@@ -381,7 +381,7 @@ def on_message(bot, update, user_data, job_queue):
             message = bot.send_message(chat_id,
                                        text=message_markdown,
                                        parse_mode=telegram.ParseMode.MARKDOWN)
-            bot.kick_chat_member(chat_id, user_id)
+            bot.kick_chat_member(chat_id, user_id, until_date=datetime.now() + timedelta(seconds=60))
 
     user_id = chat_id
     action = user_data.get('action')
