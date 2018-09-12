@@ -160,7 +160,8 @@ def on_kick_timeout(bot, job):
         bot.send_message(job.context['chat_id'],
                          text=message_markdown,
                          parse_mode=telegram.ParseMode.MARKDOWN)
-    except:
+    except Exception as e:
+        logging.error(e)
         bot.send_message(job.context['chat_id'],
                          text=constants.on_failed_kick_response)
 
