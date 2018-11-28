@@ -50,3 +50,11 @@ class Actions(IntEnum):
     set_on_kick_message = auto()
     set_regex_filter = auto()
     get_current_settings = auto()
+
+
+RH_kick_messages = [
+    'Хакер молчит и покидает чат. ⚰',
+    'Хакера забрал роскомнадзор',
+    'Хакер пошёл кормить рыбок',
+    'Хакер провалил испытание'
+]

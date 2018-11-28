@@ -4,9 +4,10 @@ import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime, timedelta
 from model import Chat, User, session_scope, orm_to_dict
-from constants import Actions
+from constants import Actions, RH_kick_messages
 import constants
 import re
+import random
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -157,9 +158,14 @@ def on_kick_timeout(bot, job):
             message_markdown = mention_markdown(
                 bot, job.context['chat_id'], job.context['user_id'], chat.on_kick_message)
 
-        bot.send_message(job.context['chat_id'],
-                         text=message_markdown,
-                         parse_mode=telegram.ParseMode.MARKDOWN)
+        if (job.context['chat_id'] == -1001147286684):
+            bot.send_message(job.context['chat_id'],
+                            text=random.choice(RH_kick_messages),
+                            parse_mode=telegram.ParseMode.MARKDOWN)    
+        else:
+            bot.send_message(job.context['chat_id'],
+                            text=message_markdown,
+                            parse_mode=telegram.ParseMode.MARKDOWN)
     except Exception as e:
         logging.error(e)
         bot.send_message(job.context['chat_id'],
