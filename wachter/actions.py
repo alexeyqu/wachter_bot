@@ -400,8 +400,9 @@ def on_message(bot, update, user_data, job_queue):
             on_forward(bot, update, job_queue)
             return
 
-        filter_mask = not authorize_user(bot, chat_id, user_id) and filter_message(chat_id, update.message.text)
-
+        message_text = update.message.text or update.message.caption
+        filter_mask = not authorize_user(bot, chat_id, user_id) and filter_message(chat_id, message_text)
+        
         if is_chat_filters_new_users(chat_id):
             filter_mask = filter_mask and is_new_user(chat_id, user_id)
 
