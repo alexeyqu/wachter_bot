@@ -69,7 +69,6 @@ def on_skip_command(bot, update, job_queue):
 def on_new_chat_member(bot, update, job_queue):
     chat_id = update.message.chat_id
     user_id = update.message.new_chat_members[-1].id
-    username = update.message.new_chat_members[-1].username
 
     for job in job_queue.jobs():
         if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
@@ -142,7 +141,6 @@ def delete_message(bot, job):
 
 
 def on_kick_timeout(bot, job):
-
     try:
         bot.delete_message(
             job.context['chat_id'], job.context['message_id'])
