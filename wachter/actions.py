@@ -25,7 +25,11 @@ def authorize_user(bot, chat_id, user_id):
 
 def mention_markdown(bot, chat_id, user_id, message):
     user = bot.get_chat_member(chat_id, user_id).user
-    user_mention_markdown = user.mention_markdown()
+    if not user.name:
+        # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)
+        user_mention_markdown = ""
+    else:
+        user_mention_markdown = user.mention_markdown()
 
     # \ нужны из-за формата сообщений в маркдауне
     return message.replace('%USER\_MENTION%', user_mention_markdown)
@@ -214,6 +218,9 @@ def on_successful_introduce(bot, update, job_queue):
             update.message.reply_text(
                 message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
 
+    else:
+        on_message(bot, update, user_data={}, job_queue=job_queue)
+
 
 def on_start_command(bot, update, user_data):
     user_id = update.message.chat_id
@@ -280,8 +287,11 @@ def on_button_click(bot, update, user_data):
                 {'chat_id': selected_chat_id, 'action': Actions.set_on_kick_message}))],
             [InlineKeyboardButton('Изменить regex для фильтра сообщений', callback_data=json.dumps(
                 {'chat_id': selected_chat_id, 'action': Actions.set_regex_filter}))],
+            [InlineKeyboardButton("Изменить фильтрацию только для новых пользователей", callback_data=json.dumps(
+                {'chat_id': selected_chat_id, 'action': Actions.set_filter_only_new_users}
+            ))],
             [InlineKeyboardButton('Получить текущие настройки', callback_data=json.dumps(
-                {'chat_id': selected_chat_id, 'action': Actions.get_current_settings}))],
+                {'chat_id': selected_chat_id, 'action': Actions.get_current_settings}))]
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -295,7 +305,8 @@ def on_button_click(bot, update, user_data):
                             Actions.set_on_known_new_chat_member_message_response,
                             Actions.set_on_successful_introducion_response,
                             Actions.set_on_kick_message,
-                            Actions.set_regex_filter]:
+                            Actions.set_regex_filter,
+                            Actions.set_filter_only_new_users]:
         bot.edit_message_text(text="Отправьте новое значение",
                               chat_id=query.message.chat_id,
                               message_id=query.message.message_id)
@@ -332,6 +343,7 @@ def filter_message(chat_id, message):
             return re.search(chat.regex_filter, message)
 
 
+
 def on_forward(bot, update, job_queue):
     chat_id = update.message.chat_id
     user_id = update.message.from_user.id
@@ -365,6 +377,22 @@ def on_forward(bot, update, job_queue):
             bot.kick_chat_member(chat_id, user_id, until_date=datetime.now() + timedelta(seconds=60))
 
 
+def is_new_user(chat_id, user_id):
+    with session_scope() as sess:
+        user = sess.query(User).filter(User.user_id == user_id, User.chat_id == chat_id).first() # if user is not in database he hasn't introduced himself with #whois
+        is_new = not user
+        print("is_new_user(chat_id={}, user_id={}) = {}".format(chat_id, user_id, is_new))
+        return is_new
+
+
+def is_chat_filters_new_users(chat_id):
+    print("chat_id: ", chat_id)
+    with session_scope() as sess:
+        filter_only_new_users = sess.query(Chat.filter_only_new_users).filter(Chat.id == chat_id).first()
+        print("is_chat_filters_new_users: ", filter_only_new_users)
+        return filter_only_new_users
+
+
 def on_message(bot, update, user_data, job_queue):
     chat_id = update.message.chat_id
 
@@ -374,7 +402,12 @@ def on_message(bot, update, user_data, job_queue):
             on_forward(bot, update, job_queue)
             return
 
-        if not authorize_user(bot, chat_id, user_id) and filter_message(chat_id, update.message.text):
+        filter_mask = not authorize_user(bot, chat_id, user_id) and filter_message(chat_id, update.message.text)
+
+        if is_chat_filters_new_users(chat_id):
+            filter_mask = filter_mask and is_new_user(chat_id, user_id)
+
+        if filter_mask:
             bot.delete_message(chat_id, update.message.message_id)
             message_markdown = mention_markdown(
                 bot, chat_id, user_id, constants.on_filtered_message)
@@ -431,7 +464,8 @@ def on_message(bot, update, user_data, job_queue):
                     Actions.set_on_known_new_chat_member_message_response,
                     Actions.set_on_successful_introducion_response,
                     Actions.set_on_kick_message,
-                    Actions.set_regex_filter]:
+                    Actions.set_regex_filter,
+                    Actions.set_filter_only_new_users]:
         message = update.message.text_markdown
         with session_scope() as sess:
             if action == Actions.set_on_new_chat_member_message_response:
@@ -445,6 +479,13 @@ def on_message(bot, update, user_data, job_queue):
                 chat = Chat(id=chat_id, notify_message=message)
             if action == Actions.set_on_kick_message:
                 chat = Chat(id=chat_id, on_kick_message=message)
+            if action == Actions.set_filter_only_new_users:
+                if message.lower() in ["true", "1"]:
+                    filter_only_new_users = True
+                else:
+                    filter_only_new_users = False
+                chat = Chat(id=chat_id, filter_only_new_users=filter_only_new_users)
+
             if action == Actions.set_regex_filter:
                 if message == "%TURN_OFF%":
                     chat = Chat(id=chat_id, regex_filter=None)

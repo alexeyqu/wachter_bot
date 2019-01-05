@@ -32,6 +32,8 @@ get_settings_message = """
 Regex фильтр: {regex_filter}
 ---
 Сообщение после кика: {on_kick_message}
+–––
+Кикать по regex только новых: {filter_only_new_users}
 """
 
 default_kick_timeout = 0
@@ -49,6 +51,7 @@ class Actions(IntEnum):
     set_kick_timeout = auto()
     set_on_kick_message = auto()
     set_regex_filter = auto()
+    set_filter_only_new_users = auto()
     get_current_settings = auto()
 
 
