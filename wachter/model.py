@@ -21,6 +21,7 @@ class Chat(Base):
     on_kick_message = Column(Text, nullable=False, default='%USER\_MENTION% молчит и покидает чат')
     notify_message = Column(Text, nullable=False, default='%USER\_MENTION%, пожалуйста, представьтесь и поздоровайтесь с сообществом.')
     regex_filter = Column(Text, nullable=True)
+    filter_only_new_users = Column(Boolean, nullable=False, default=False)
     kick_timeout = Column(Integer, nullable=False, default=0)
 
     def __repr__(self):
