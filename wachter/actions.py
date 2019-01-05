@@ -4,7 +4,7 @@ import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime, timedelta
 from model import Chat, User, session_scope, orm_to_dict
-from constants import Actions, RH_kick_messages
+from constants import Actions, RH_kick_messages, RH_CHAT_ID
 import constants
 import re
 import random
@@ -158,9 +158,11 @@ def on_kick_timeout(bot, job):
             message_markdown = mention_markdown(
                 bot, job.context['chat_id'], job.context['user_id'], chat.on_kick_message)
 
-        if (job.context['chat_id'] == -1001147286684):
+        if (job.context['chat_id'] == RH_CHAT_ID):
+            message_markdown = mention_markdown(
+                bot, job.context['chat_id'], job.context['user_id'], random.choice(RH_kick_messages))
             bot.send_message(job.context['chat_id'],
-                            text=random.choice(RH_kick_messages),
+                            text=message_markdown,
                             parse_mode=telegram.ParseMode.MARKDOWN)    
         else:
             bot.send_message(job.context['chat_id'],
