@@ -4,7 +4,7 @@ import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime, timedelta
 from model import Chat, User, session_scope, orm_to_dict
-from constants import Actions, RH_kick_messages
+from constants import Actions, RH_kick_messages, RH_CHAT_ID
 import constants
 import re
 import random
@@ -69,6 +69,7 @@ def on_skip_command(bot, update, job_queue):
 def on_new_chat_member(bot, update, job_queue):
     chat_id = update.message.chat_id
     user_id = update.message.new_chat_members[-1].id
+    username = update.message.new_chat_members[-1].username
 
     for job in job_queue.jobs():
         if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
@@ -141,6 +142,7 @@ def delete_message(bot, job):
 
 
 def on_kick_timeout(bot, job):
+
     try:
         bot.delete_message(
             job.context['chat_id'], job.context['message_id'])
@@ -158,9 +160,11 @@ def on_kick_timeout(bot, job):
             message_markdown = mention_markdown(
                 bot, job.context['chat_id'], job.context['user_id'], chat.on_kick_message)
 
-        if (job.context['chat_id'] == -1001147286684):
+        if (job.context['chat_id'] == RH_CHAT_ID):
+            message_markdown = mention_markdown(
+                bot, job.context['chat_id'], job.context['user_id'], random.choice(RH_kick_messages))
             bot.send_message(job.context['chat_id'],
-                            text=random.choice(RH_kick_messages),
+                            text=message_markdown,
                             parse_mode=telegram.ParseMode.MARKDOWN)    
         else:
             bot.send_message(job.context['chat_id'],
