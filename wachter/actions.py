@@ -379,17 +379,15 @@ def on_forward(bot, update, job_queue):
 
 def is_new_user(chat_id, user_id):
     with session_scope() as sess:
-        user = sess.query(User).filter(User.user_id == user_id, User.chat_id == chat_id).first() # if user is not in database he hasn't introduced himself with #whois
+        #  if user is not in database he hasn't introduced himself with #whois
+        user = sess.query(User).filter(User.user_id == user_id, User.chat_id == chat_id).first()
         is_new = not user
-        print("is_new_user(chat_id={}, user_id={}) = {}".format(chat_id, user_id, is_new))
         return is_new
 
 
 def is_chat_filters_new_users(chat_id):
-    print("chat_id: ", chat_id)
     with session_scope() as sess:
         filter_only_new_users = sess.query(Chat.filter_only_new_users).filter(Chat.id == chat_id).first()
-        print("is_chat_filters_new_users: ", filter_only_new_users)
         return filter_only_new_users
 
 
