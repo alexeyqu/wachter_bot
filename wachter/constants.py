@@ -29,7 +29,7 @@ get_settings_message = """
 ---
 Сообщение предупреждения: {notify_message}
 ---
-Regex фильтр: {regex_filter}
+Regex фильтр: ```{regex_filter}```
 ---
 Сообщение после кика: {on_kick_message}
 –––
