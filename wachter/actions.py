@@ -334,6 +334,9 @@ def on_button_click(bot, update, user_data):
 
 
 def filter_message(chat_id, message):
+    if not message:
+        return False
+
     with session_scope() as sess:
         chat = sess.query(Chat).filter(Chat.id == chat_id).first()
 
@@ -392,6 +395,9 @@ def is_chat_filters_new_users(chat_id):
 
 
 def on_message(bot, update, user_data, job_queue):
+    if not update.message:
+        update.message = update.edited_message
+
     chat_id = update.message.chat_id
 
     if chat_id < 0:
