@@ -429,88 +429,88 @@ def on_message(bot, update, user_data, job_queue):
                                        text=message_markdown,
                                        parse_mode=telegram.ParseMode.MARKDOWN)
             bot.kick_chat_member(chat_id, user_id, until_date=datetime.now() + timedelta(seconds=60))
+    else:
+        user_id = chat_id
+        action = user_data.get('action')
 
-    user_id = chat_id
-    action = user_data.get('action')
-
-    if action is None:
-        return
-
-    chat_id = user_data["chat_id"]
-
-    if action == Actions.set_kick_timeout:
-        message = update.message.text
-        try:
-            timeout = int(message)
-            assert timeout >= 0
-        except:
-            update.message.reply_text(
-                constants.on_failed_set_kick_timeout_response)
+        if action is None:
             return
 
-        with session_scope() as sess:
-            chat = Chat(id=chat_id, kick_timeout=timeout)
-            sess.merge(chat)
-        user_data['action'] = None
+        chat_id = user_data["chat_id"]
 
-        keyboard = [
-            [InlineKeyboardButton('К настройке чата', callback_data=json.dumps(
-                {'chat_id': chat_id, 'action': Actions.select_chat})),
-             InlineKeyboardButton('К списку чатов', callback_data=json.dumps(
-                 {'action': Actions.start_select_chat}))],
-        ]
+        if action == Actions.set_kick_timeout:
+            message = update.message.text
+            try:
+                timeout = int(message)
+                assert timeout >= 0
+            except:
+                update.message.reply_text(
+                    constants.on_failed_set_kick_timeout_response)
+                return
 
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        update.message.reply_text(
-            constants.on_success_set_kick_timeout_response, reply_markup=reply_markup)
+            with session_scope() as sess:
+                chat = Chat(id=chat_id, kick_timeout=timeout)
+                sess.merge(chat)
+            user_data['action'] = None
 
-    elif action in [Actions.set_on_new_chat_member_message_response,
-                    Actions.set_notify_message,
-                    Actions.set_on_known_new_chat_member_message_response,
-                    Actions.set_on_successful_introducion_response,
-                    Actions.set_on_kick_message,
-                    Actions.set_regex_filter,
-                    Actions.set_filter_only_new_users]:
-        message = update.message.text_markdown
-        with session_scope() as sess:
-            if action == Actions.set_on_new_chat_member_message_response:
-                chat = Chat(id=chat_id, on_new_chat_member_message=message)
-            if action == Actions.set_on_known_new_chat_member_message_response:
-                chat = Chat(
-                    id=chat_id, on_known_new_chat_member_message=message)
-            if action == Actions.set_on_successful_introducion_response:
-                chat = Chat(id=chat_id, on_introduce_message=message)
-            if action == Actions.set_notify_message:
-                chat = Chat(id=chat_id, notify_message=message)
-            if action == Actions.set_on_kick_message:
-                chat = Chat(id=chat_id, on_kick_message=message)
-            if action == Actions.set_filter_only_new_users:
-                if message.lower() in ["true", "1"]:
-                    filter_only_new_users = True
-                else:
-                    filter_only_new_users = False
-                chat = Chat(id=chat_id, filter_only_new_users=filter_only_new_users)
+            keyboard = [
+                [InlineKeyboardButton('К настройке чата', callback_data=json.dumps(
+                    {'chat_id': chat_id, 'action': Actions.select_chat})),
+                InlineKeyboardButton('К списку чатов', callback_data=json.dumps(
+                    {'action': Actions.start_select_chat}))],
+            ]
 
-            if action == Actions.set_regex_filter:
-                if message == "%TURN_OFF%":
-                    chat = Chat(id=chat_id, regex_filter=None)
-                else:
-                    message = update.message.text
-                    chat = Chat(id=chat_id, regex_filter=message)
-            sess.merge(chat)
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            update.message.reply_text(
+                constants.on_success_set_kick_timeout_response, reply_markup=reply_markup)
 
-        user_data['action'] = None
+        elif action in [Actions.set_on_new_chat_member_message_response,
+                        Actions.set_notify_message,
+                        Actions.set_on_known_new_chat_member_message_response,
+                        Actions.set_on_successful_introducion_response,
+                        Actions.set_on_kick_message,
+                        Actions.set_regex_filter,
+                        Actions.set_filter_only_new_users]:
+            message = update.message.text_markdown
+            with session_scope() as sess:
+                if action == Actions.set_on_new_chat_member_message_response:
+                    chat = Chat(id=chat_id, on_new_chat_member_message=message)
+                if action == Actions.set_on_known_new_chat_member_message_response:
+                    chat = Chat(
+                        id=chat_id, on_known_new_chat_member_message=message)
+                if action == Actions.set_on_successful_introducion_response:
+                    chat = Chat(id=chat_id, on_introduce_message=message)
+                if action == Actions.set_notify_message:
+                    chat = Chat(id=chat_id, notify_message=message)
+                if action == Actions.set_on_kick_message:
+                    chat = Chat(id=chat_id, on_kick_message=message)
+                if action == Actions.set_filter_only_new_users:
+                    if message.lower() in ["true", "1"]:
+                        filter_only_new_users = True
+                    else:
+                        filter_only_new_users = False
+                    chat = Chat(id=chat_id, filter_only_new_users=filter_only_new_users)
 
-        keyboard = [
-            [InlineKeyboardButton('К настройке чата', callback_data=json.dumps(
-                {'chat_id': chat_id, 'action': Actions.select_chat})),
-             InlineKeyboardButton('К списку чатов', callback_data=json.dumps(
-                 {'action': Actions.start_select_chat}))],
-        ]
+                if action == Actions.set_regex_filter:
+                    if message == "%TURN_OFF%":
+                        chat = Chat(id=chat_id, regex_filter=None)
+                    else:
+                        message = update.message.text
+                        chat = Chat(id=chat_id, regex_filter=message)
+                sess.merge(chat)
 
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        update.message.reply_text(
-            constants.on_set_new_message, reply_markup=reply_markup)
+            user_data['action'] = None
+
+            keyboard = [
+                [InlineKeyboardButton('К настройке чата', callback_data=json.dumps(
+                    {'chat_id': chat_id, 'action': Actions.select_chat})),
+                InlineKeyboardButton('К списку чатов', callback_data=json.dumps(
+                    {'action': Actions.start_select_chat}))],
+            ]
+
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            update.message.reply_text(
+                constants.on_set_new_message, reply_markup=reply_markup)
 
 
 def on_whois_command(bot, update, args):
