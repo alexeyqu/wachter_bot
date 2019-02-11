@@ -182,7 +182,8 @@ def on_successful_introduce(bot, update, job_queue):
     if not update.message:
         update.message = update.edited_message
 
-    if "#whois" in update.message.parse_entities(types=['hashtag']).values():
+    if "#whois" in update.message.parse_entities(types=['hashtag']).values() \
+        and len(update.message.text) >= constants.min_whois_length:
         chat_id = update.message.chat_id
         user_id = update.message.from_user.id
 
