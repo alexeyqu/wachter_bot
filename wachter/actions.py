@@ -18,10 +18,12 @@ def on_error(bot, update, error):
     logger.warning(f'Update "{update}" caused error "{error}"')
 
 
-def authorize_user(bot, chat_id, user_id):
-    status = bot.get_chat_member(chat_id, user_id).status
-    return status in ['creator', 'administrator']
-
+def authorize_user(bot, chat_id, user_id): 
+    try:
+        status = bot.get_chat_member(chat_id, user_id).status
+        return status in ['creator', 'administrator']
+    except e:
+        return False
 
 def mention_markdown(bot, chat_id, user_id, message):
     user = bot.get_chat_member(chat_id, user_id).user
@@ -223,6 +225,14 @@ def on_successful_introduce(bot, update, job_queue):
         on_message(bot, update, user_data={}, job_queue=job_queue)
 
 
+def get_chats(users, user_id, bot):
+    for x in users:
+        try:
+            if authorize_user(bot, x.chat_id, user_id):
+                yield {"title": bot.get_chat(x.chat_id).title or x.chat_id, "id": x.chat_id}
+        except Exception:
+            pass
+
 def on_start_command(bot, update, user_data):
     user_id = update.message.chat_id
 
@@ -231,8 +241,7 @@ def on_start_command(bot, update, user_data):
 
     with session_scope() as sess:
         users = sess.query(User).filter(User.user_id == user_id)
-        user_chats = [{"title": bot.get_chat(x.chat_id).title or x.chat_id, "id": x.chat_id}
-                      for x in users]
+        user_chats = list(get_chats(users, user_id, bot))
 
     if len(user_chats) == 0:
         update.message.reply_text('У вас нет доступных чатов.')
