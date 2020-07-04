@@ -13,8 +13,8 @@ def main():
 
     dp.add_handler(MessageHandler(Filters.status_update.new_chat_members & filter_bot_added,
                                   actions.on_new_chat_member, pass_job_queue=True))
-    dp.add_handler(MessageHandler(Filters.entity('hashtag'), actions.on_successful_introduce,
-                                  pass_job_queue=True, edited_updates=True))
+    dp.add_handler(MessageHandler(Filters.entity('hashtag'), actions.on_hashtag_message,
+                                  pass_job_queue=True, edited_updates=True, pass_user_data=True))
     dp.add_handler(MessageHandler(Filters.forwarded, actions.on_forward, pass_job_queue=True))
 
     dp.add_handler(CommandHandler('start', actions.on_start_command, pass_user_data=True))

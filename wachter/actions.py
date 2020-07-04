@@ -33,7 +33,7 @@ def mention_markdown(bot, chat_id, user_id, message):
     else:
         user_mention_markdown = user.mention_markdown()
 
-    # \ нужны из-за формата сообщений в маркдауне
+    # \ нужен из-за формата сообщений в маркдауне
     return message.replace('%USER\_MENTION%', user_mention_markdown)
 
 
@@ -180,13 +180,15 @@ def on_kick_timeout(bot, job):
                          text=constants.on_failed_kick_response)
 
 
-def on_successful_introduce(bot, update, job_queue):
+def on_hashtag_message(bot, update, user_data, job_queue):
     if not update.message:
         update.message = update.edited_message
 
+    chat_id = update.message.chat_id
+
     if "#whois" in update.message.parse_entities(types=['hashtag']).values() \
-        and len(update.message.text) >= constants.min_whois_length:
-        chat_id = update.message.chat_id
+        and len(update.message.text) >= constants.min_whois_length \
+        and chat_id < 0:
         user_id = update.message.from_user.id
 
         with session_scope() as sess:
@@ -222,7 +224,7 @@ def on_successful_introduce(bot, update, job_queue):
                 message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
 
     else:
-        on_message(bot, update, user_data={}, job_queue=job_queue)
+        on_message(bot, update, user_data=user_data, job_queue=job_queue)
 
 
 def get_chats(users, user_id, bot):
