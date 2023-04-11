@@ -158,19 +158,20 @@ def on_kick_timeout(bot, job):
                              job.context["user_id"],
                              until_date=datetime.now() + timedelta(seconds=60))
 
-        with session_scope() as sess:
-            chat = sess.query(Chat).filter(
-                Chat.id == job.context['chat_id']).first()
-            message_markdown = mention_markdown(
-                bot, job.context['chat_id'], job.context['user_id'], chat.on_kick_message)
+        if chat.on_kick_message.lower() not in ["false", "0"]:
+            with session_scope() as sess:
+                chat = sess.query(Chat).filter(
+                    Chat.id == job.context['chat_id']).first()
+                message_markdown = mention_markdown(
+                    bot, job.context['chat_id'], job.context['user_id'], chat.on_kick_message)
 
-        if (job.context['chat_id'] == RH_CHAT_ID):
-            message_markdown = mention_markdown(
-                bot, job.context['chat_id'], job.context['user_id'], random.choice(RH_kick_messages))
+            if (job.context['chat_id'] == RH_CHAT_ID):
+                message_markdown = mention_markdown(
+                    bot, job.context['chat_id'], job.context['user_id'], random.choice(RH_kick_messages))
 
-        bot.send_message(job.context['chat_id'],
-                        text=message_markdown,
-                        parse_mode=telegram.ParseMode.MARKDOWN)
+            bot.send_message(job.context['chat_id'],
+                            text=message_markdown,
+                            parse_mode=telegram.ParseMode.MARKDOWN)
     except Exception as e:
         logging.error(e)
         bot.send_message(job.context['chat_id'],
