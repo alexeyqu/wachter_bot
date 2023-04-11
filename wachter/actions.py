@@ -167,13 +167,10 @@ def on_kick_timeout(bot, job):
         if (job.context['chat_id'] == RH_CHAT_ID):
             message_markdown = mention_markdown(
                 bot, job.context['chat_id'], job.context['user_id'], random.choice(RH_kick_messages))
-            bot.send_message(job.context['chat_id'],
-                            text=message_markdown,
-                            parse_mode=telegram.ParseMode.MARKDOWN)    
-        else:
-            bot.send_message(job.context['chat_id'],
-                            text=message_markdown,
-                            parse_mode=telegram.ParseMode.MARKDOWN)
+
+        bot.send_message(job.context['chat_id'],
+                        text=message_markdown,
+                        parse_mode=telegram.ParseMode.MARKDOWN)
     except Exception as e:
         logging.error(e)
         bot.send_message(job.context['chat_id'],
