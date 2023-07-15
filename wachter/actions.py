@@ -74,50 +74,51 @@ def on_skip_command(bot, update, job_queue):
 
 def on_new_chat_member(bot, update, job_queue):
     chat_id = update.message.chat_id
-    user_id = update.message.new_chat_members[-1].id
+    for user in update.message.new_chat_members:
+        user_id = user.id
 
-    for job in job_queue.jobs():
-        if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
-            job.enabled = False
-            job.schedule_removal()
+        for job in job_queue.jobs():
+            if job.context['user_id'] == user_id and job.context['chat_id'] == chat_id and job.enabled == True:
+                job.enabled = False
+                job.schedule_removal()
 
-    with session_scope() as sess:
-        user = sess.query(User).filter(
-            User.chat_id == chat_id, User.user_id == user_id).first()
-        chat = sess.query(Chat).filter(Chat.id == chat_id).first()
+        with session_scope() as sess:
+            user = sess.query(User).filter(
+                User.chat_id == chat_id, User.user_id == user_id).first()
+            chat = sess.query(Chat).filter(Chat.id == chat_id).first()
 
-        if chat is None:
-            chat = Chat(id=chat_id)
-            sess.add(chat)
-            sess.commit()
+            if chat is None:
+                chat = Chat(id=chat_id)
+                sess.add(chat)
+                sess.commit()
 
-        if user is not None:
-            update.message.reply_text(chat.on_known_new_chat_member_message)
-            return
+            if user is not None:
+                update.message.reply_text(chat.on_known_new_chat_member_message)
+                continue
 
-        message = chat.on_new_chat_member_message
-        timeout = chat.kick_timeout
+            message = chat.on_new_chat_member_message
+            timeout = chat.kick_timeout
 
-    if message == constants.skip_on_new_chat_member_message:
-        return
+        if message == constants.skip_on_new_chat_member_message:
+            continue
 
-    message_markdown = mention_markdown(bot, chat_id, user_id, message)
-    msg = update.message.reply_text(
-        message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
+        message_markdown = mention_markdown(bot, chat_id, user_id, message)
+        msg = update.message.reply_text(
+            message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
 
-    if timeout != 0:
-        if timeout >= 10:
-            job = job_queue.run_once(on_notify_timeout, (timeout - constants.notify_delta) * 60, context={
+        if timeout != 0:
+            if timeout >= 10:
+                job = job_queue.run_once(on_notify_timeout, (timeout - constants.notify_delta) * 60, context={
+                    "chat_id": chat_id,
+                    "user_id": user_id,
+                    "job_queue": job_queue
+                })
+
+            job = job_queue.run_once(on_kick_timeout, timeout * 60, context={
                 "chat_id": chat_id,
                 "user_id": user_id,
-                "job_queue": job_queue
+                "message_id": msg.message_id
             })
-
-        job = job_queue.run_once(on_kick_timeout, timeout * 60, context={
-            "chat_id": chat_id,
-            "user_id": user_id,
-            "message_id": msg.message_id
-        })
 
 
 def on_notify_timeout(bot, job):
