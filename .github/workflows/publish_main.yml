@@ -62,7 +62,7 @@ jobs:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           ROOT_DIR: /home/${{ secrets.DO_USER }}/${{ env.PACKAGE_LABEL }}
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_PROD_TOKEN }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_ERROR_CHAT_ID: ${{ secrets.TELEGRAM_ERROR_CHAT_ID }}
         with:
           host: ${{ secrets.DO_HOST }}
