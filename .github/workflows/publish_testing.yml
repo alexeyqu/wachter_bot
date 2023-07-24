@@ -1,0 +1,85 @@
+name: Docker testing
+
+on:
+  push:
+    # Publish `dev` as Docker `testing` image.
+    branches:
+      - dev
+
+env:
+  IMAGE_NAME: wachterbot
+  GITHUB_USERNAME: alexeyqu
+  PACKAGE_LABEL: testing
+
+jobs:
+  # Push image to GitHub Packages.
+  # See also https://docs.docker.com/docker-hub/builds/
+  push:
+    runs-on: ubuntu-latest
+    environment: testing
+    permissions: write-all
+
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+
+      - uses: actions/checkout@v2
+        with:
+          ref: master
+
+      - name: Publish to Github Packages Registry with cache
+        uses: whoan/docker-build-with-cache-action@v5
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+        with:
+          image_name: ${{ github.repository }}/${{ env.IMAGE_NAME }}
+          registry: ghcr.io
+          username: ${{ env.GITHUB_USERNAME }} 
+          password: ${{ secrets.GITHUB_TOKEN }}
+          dockerfile: Dockerfile
+          image_tag: ${{ env.PACKAGE_LABEL }}
+
+      - name: copy the docker-compose file
+        uses: appleboy/scp-action@master
+        env:
+          ROOT_DIR: /home/${{ secrets.DO_USER }}/${{ env.PACKAGE_LABEL }}
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          passphrase: ${{ secrets.DO_SSH_KEY_PASSWORD }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT }}
+          source: "docker-compose.${{ env.PACKAGE_LABEL }}.yml"
+          target: "${{ env.ROOT_DIR }}"
+
+      - name: Deploy package to digitalocean
+        uses: appleboy/ssh-action@master
+        env:
+          GITHUB_USERNAME: ${{ env.GITHUB_USERNAME }}  
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          ROOT_DIR: /home/${{ secrets.DO_USER }}/${{ env.PACKAGE_LABEL }}
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_ERROR_CHAT_ID: ${{ secrets.TELEGRAM_ERROR_CHAT_ID }}
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          passphrase: ${{ secrets.DO_SSH_KEY_PASSWORD }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT }}
+          envs: GITHUB_USERNAME, GITHUB_TOKEN, ROOT_DIR, POSTGRES_URL, TELEGRAM_TOKEN
+          script: |
+            export CR_PAT=${{ secrets.GH_PAT_READ_PACKAGE }}
+            echo $CR_PAT | docker login  ghcr.io -u $GITHUB_USERNAME
+            cd ${{ env.ROOT_DIR }}
+            touch .env
+            echo POSTGRES_URL=${{ env.POSTGRES_URL }} >> .env
+            echo TELEGRAM_TOKEN=${{ env.TELEGRAM_TOKEN }} >> .env
+            echo TELEGRAM_ERROR_CHAT_ID=${{ env.TELEGRAM_ERROR_CHAT_ID }} >> .env
+            docker-compose -f docker-compose.${{ env.PACKAGE_LABEL }}.yml stop
+            docker-compose -f docker-compose.${{ env.PACKAGE_LABEL }}.yml pull
+            docker-compose -f docker-compose.${{ env.PACKAGE_LABEL }}.yml up --force-recreate -d
+            docker image prune -a -f 
