@@ -10,14 +10,13 @@ env:
   IMAGE_NAME: wachterbot
   GITHUB_USERNAME: alexeyqu
   PACKAGE_LABEL: prod
-  TELEGRAM_ERROR_CHAT_ID: ${{ secrets.TELEGRAM_ERROR_CHAT_ID }}
-  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_PROD_TOKEN }}
 
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
   push:
     runs-on: ubuntu-latest
+    environment: production
     permissions: write-all
 
     steps:
@@ -63,8 +62,8 @@ jobs:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           ROOT_DIR: /home/${{ secrets.DO_USER }}/${{ env.PACKAGE_LABEL }}
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
-          TELEGRAM_TOKEN: ${{ env.TELEGRAM_TOKEN }}
-          TELEGRAM_ERROR_CHAT_ID: ${{ env.TELEGRAM_ERROR_CHAT_ID }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_PROD_TOKEN }}
+          TELEGRAM_ERROR_CHAT_ID: ${{ secrets.TELEGRAM_ERROR_CHAT_ID }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
