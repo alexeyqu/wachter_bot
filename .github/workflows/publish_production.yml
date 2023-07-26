@@ -1,4 +1,4 @@
-name: Docker main
+name: Docker prod
 
 on:
   push:
