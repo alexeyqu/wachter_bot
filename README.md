@@ -14,3 +14,13 @@ $ docker run -e TELEGRAM_TOKEN=<token> wachter_bot
 1. Добавить в чат
 2. Написать whois (минимальная длина 20 символов)
 3. Написать боту в лс /start - бот заработает и появятся настройки чата
+
+## Local Development
+
+1) Set `TELEGRAM_TOKEN` environment variable;
+
+2) Run:
+
+```bash
+docker-compose -f docker-compose.dev.yml up
+```
