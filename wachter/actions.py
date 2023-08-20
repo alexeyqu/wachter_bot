@@ -8,24 +8,25 @@ from constants import Actions, RH_kick_messages, RH_CHAT_ID
 import constants
 import re
 import random
+from typing import *
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def on_error(bot, update, error):
+def on_error(bot: telegram.Bot, update: telegram.Update, error: any):
     logger.warning(f'Update "{update}" caused error "{error}"')
 
 
-def authorize_user(bot, chat_id, user_id): 
+def authorize_user(bot: telegram.Bot, chat_id: int, user_id: int): 
     try:
         status = bot.get_chat_member(chat_id, user_id).status
         return status in ['creator', 'administrator']
     except e:
         return False
 
-def mention_markdown(bot, chat_id, user_id, message):
+def mention_markdown(bot: telegram.Bot, chat_id: int, user_id: int, message: telegram.Message):
     user = bot.get_chat_member(chat_id, user_id).user
     if not user.name:
         # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)
@@ -37,11 +38,11 @@ def mention_markdown(bot, chat_id, user_id, message):
     return message.replace('%USER\_MENTION%', user_mention_markdown)
 
 
-def on_help_command(bot, update):
+def on_help_command(bot: telegram.Bot, update: telegram.Update):
     update.message.reply_text(constants.help_message)
 
 
-def on_skip_command(bot, update, job_queue):
+def on_skip_command(bot: telegram.Bot, update: telegram.Update, job_queue: telegram.ext.JobQueue):
     chat_id = update.message.chat_id
 
     if chat_id > 0:
@@ -72,7 +73,7 @@ def on_skip_command(bot, update, job_queue):
         update.message.reply_text(constants.on_failed_skip)
 
 
-def on_new_chat_member(bot, update, job_queue):
+def on_new_chat_member(bot: telegram.Bot, update: telegram.Update, job_queue: telegram.ext.JobQueue):
     chat_id = update.message.chat_id
     user_id = update.message.new_chat_members[-1].id
 
@@ -120,7 +121,7 @@ def on_new_chat_member(bot, update, job_queue):
         })
 
 
-def on_notify_timeout(bot, job):
+def on_notify_timeout(bot: telegram.Bot, job: telegram.ext.Job):
     with session_scope() as sess:
         chat = sess.query(Chat).filter(
             Chat.id == job.context['chat_id']).first()
@@ -139,14 +140,14 @@ def on_notify_timeout(bot, job):
         })
 
 
-def delete_message(bot, job):
+def delete_message(bot: telegram.Bot, job: telegram.ext.Job):
     try:
         bot.delete_message(job.context['chat_id'], job.context['message_id'])
     except:
         print(f"can't delete {job.context['message_id']} from {job.context['chat_id']}")
 
 
-def on_kick_timeout(bot, job):
+def on_kick_timeout(bot: telegram.Bot, job: telegram.ext.Job):
     try:
         bot.delete_message(
             job.context['chat_id'], job.context['message_id'])
@@ -177,7 +178,7 @@ def on_kick_timeout(bot, job):
                          text=constants.on_failed_kick_response)
 
 
-def on_hashtag_message(bot, update, user_data, job_queue):
+def on_hashtag_message(bot: telegram.Bot, update: telegram.Update, user_data: dict, job_queue: telegram.ext.JobQueue):
     if not update.message:
         update.message = update.edited_message
 
@@ -223,8 +224,7 @@ def on_hashtag_message(bot, update, user_data, job_queue):
     else:
         on_message(bot, update, user_data=user_data, job_queue=job_queue)
 
-
-def get_chats(users, user_id, bot):
+def get_chats(users: list[User], user_id: int, bot: telegram.Bot):
     for x in users:
         try:
             if authorize_user(bot, x.chat_id, user_id):
@@ -232,7 +232,7 @@ def get_chats(users, user_id, bot):
         except Exception:
             pass
 
-def on_start_command(bot, update, user_data):
+def on_start_command(bot: telegram.Bot, update: telegram.Update, user_data: dict):
     user_id = update.message.chat_id
 
     if user_id < 0:
@@ -255,7 +255,7 @@ def on_start_command(bot, update, user_data):
         constants.on_start_command, reply_markup=reply_markup)
 
 
-def on_button_click(bot, update, user_data):
+def on_button_click(bot: telegram.Bot, update: telegram.Update, user_data: dict):
     query = update.callback_query
     data = json.loads(query.data)
 
@@ -342,7 +342,7 @@ def on_button_click(bot, update, user_data):
         user_data['action'] = None
 
 
-def filter_message(chat_id, message):
+def filter_message(chat_id: int, message: telegram.Message):
     if not message:
         return False
 
@@ -356,7 +356,7 @@ def filter_message(chat_id, message):
 
 
 
-def on_forward(bot, update, job_queue):
+def on_forward(bot: telegram.Bot, update: telegram.Update, job_queue: telegram.ext.JobQueue):
     chat_id = update.message.chat_id
     user_id = update.message.from_user.id
     removed = False
@@ -389,7 +389,7 @@ def on_forward(bot, update, job_queue):
             bot.kick_chat_member(chat_id, user_id, until_date=datetime.now() + timedelta(seconds=60))
 
 
-def is_new_user(chat_id, user_id):
+def is_new_user(chat_id: int, user_id: int):
     with session_scope() as sess:
         #  if user is not in database he hasn't introduced himself with #whois
         user = sess.query(User).filter(User.user_id == user_id, User.chat_id == chat_id).first()
@@ -397,13 +397,13 @@ def is_new_user(chat_id, user_id):
         return is_new
 
 
-def is_chat_filters_new_users(chat_id):
+def is_chat_filters_new_users(chat_id: int):
     with session_scope() as sess:
         filter_only_new_users = sess.query(Chat.filter_only_new_users).filter(Chat.id == chat_id).first()
         return filter_only_new_users
 
 
-def on_message(bot, update, user_data, job_queue):
+def on_message(bot: telegram.Bot, update: telegram.Update, user_data: dict, job_queue: telegram.ext.JobQueue):
     if not update.message:
         update.message = update.edited_message
 
@@ -522,7 +522,7 @@ def on_message(bot, update, user_data, job_queue):
                 constants.on_set_new_message, reply_markup=reply_markup)
 
 
-def on_whois_command(bot, update, args):
+def on_whois_command(bot: telegram.Bot, update: telegram.Update, args: list):
     if len(args) != 1:
         update.message.reply_text("Usage: /whois <user_id>")
 
