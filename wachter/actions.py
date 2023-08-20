@@ -15,7 +15,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 
-def on_error(bot: telegram.Bot, update: telegram.Update, error: any):
+def on_error(bot: telegram.Bot, update: telegram.Update, error: telegram.error.TelegramError):
     logger.warning(f'Update "{update}" caused error "{error}"')
 
 
