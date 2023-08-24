@@ -1,6 +1,6 @@
 import json
 import logging
-from telegram import Bot, Update, Message, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Bot, Update, Message, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 from telegram.ext import Job, JobQueue
 from telegram.error import TelegramError
 from datetime import datetime, timedelta
