@@ -1,32 +1,33 @@
 import json
 import logging
-import telegram
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Bot, Update, Message, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Job, JobQueue
+from telegram.error import TelegramError
 from datetime import datetime, timedelta
 from model import Chat, User, session_scope, orm_to_dict
 from constants import Actions, RH_kick_messages, RH_CHAT_ID
 import constants
 import re
 import random
-from typing import *
+from typing import int, dict
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def on_error(bot: telegram.Bot, update: telegram.Update, error: telegram.error.TelegramError):
+def on_error(bot: Bot, update: Update, error: TelegramError):
     logger.warning(f'Update "{update}" caused error "{error}"')
 
 
-def authorize_user(bot: telegram.Bot, chat_id: int, user_id: int): 
+def authorize_user(bot: Bot, chat_id: int, user_id: int): 
     try:
         status = bot.get_chat_member(chat_id, user_id).status
         return status in ['creator', 'administrator']
     except e:
         return False
 
-def mention_markdown(bot: telegram.Bot, chat_id: int, user_id: int, message: telegram.Message):
+def mention_markdown(bot: Bot, chat_id: int, user_id: int, message: Message):
     user = bot.get_chat_member(chat_id, user_id).user
     if not user.name:
         # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)
@@ -38,11 +39,11 @@ def mention_markdown(bot: telegram.Bot, chat_id: int, user_id: int, message: tel
     return message.replace('%USER\_MENTION%', user_mention_markdown)
 
 
-def on_help_command(bot: telegram.Bot, update: telegram.Update):
+def on_help_command(bot: Bot, update: Update):
     update.message.reply_text(constants.help_message)
 
 
-def on_skip_command(bot: telegram.Bot, update: telegram.Update, job_queue: telegram.ext.JobQueue):
+def on_skip_command(bot: Bot, update: Update, job_queue: JobQueue):
     chat_id = update.message.chat_id
 
     if chat_id > 0:
@@ -73,7 +74,7 @@ def on_skip_command(bot: telegram.Bot, update: telegram.Update, job_queue: teleg
         update.message.reply_text(constants.on_failed_skip)
 
 
-def on_new_chat_member(bot: telegram.Bot, update: telegram.Update, job_queue: telegram.ext.JobQueue):
+def on_new_chat_member(bot: Bot, update: Update, job_queue: JobQueue):
     chat_id = update.message.chat_id
     user_id = update.message.new_chat_members[-1].id
 
@@ -104,7 +105,7 @@ def on_new_chat_member(bot: telegram.Bot, update: telegram.Update, job_queue: te
 
     message_markdown = mention_markdown(bot, chat_id, user_id, message)
     msg = update.message.reply_text(
-        message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
+        message_markdown, parse_mode=ParseMode.MARKDOWN)
 
     if timeout != 0:
         if timeout >= 10:
@@ -121,7 +122,7 @@ def on_new_chat_member(bot: telegram.Bot, update: telegram.Update, job_queue: te
         })
 
 
-def on_notify_timeout(bot: telegram.Bot, job: telegram.ext.Job):
+def on_notify_timeout(bot: Bot, job: Job):
     with session_scope() as sess:
         chat = sess.query(Chat).filter(
             Chat.id == job.context['chat_id']).first()
@@ -131,7 +132,7 @@ def on_notify_timeout(bot: telegram.Bot, job: telegram.ext.Job):
 
         message = bot.send_message(job.context['chat_id'],
                                    text=message_markdown,
-                                   parse_mode=telegram.ParseMode.MARKDOWN)
+                                   parse_mode=ParseMode.MARKDOWN)
 
         job.context['job_queue'].run_once(delete_message, constants.notify_delta * 60, context={
             "chat_id": job.context['chat_id'],
@@ -140,14 +141,17 @@ def on_notify_timeout(bot: telegram.Bot, job: telegram.ext.Job):
         })
 
 
-def delete_message(bot: telegram.Bot, job: telegram.ext.Job):
+def delete_message(bot: Bot, job: Job):
+    logger.info("delete called")
     try:
         bot.delete_message(job.context['chat_id'], job.context['message_id'])
+        logger.info("delete sucess")
     except:
+        logger.info("suck")
         print(f"can't delete {job.context['message_id']} from {job.context['chat_id']}")
 
 
-def on_kick_timeout(bot: telegram.Bot, job: telegram.ext.Job):
+def on_kick_timeout(bot: Bot, job: Job):
     try:
         bot.delete_message(
             job.context['chat_id'], job.context['message_id'])
@@ -171,14 +175,14 @@ def on_kick_timeout(bot: telegram.Bot, job: telegram.ext.Job):
                         bot, job.context['chat_id'], job.context['user_id'], random.choice(RH_kick_messages))
                 bot.send_message(job.context['chat_id'],
                                 text=message_markdown,
-                                parse_mode=telegram.ParseMode.MARKDOWN)
+                                parse_mode=ParseMode.MARKDOWN)
     except Exception as e:
         logging.error(e)
         bot.send_message(job.context['chat_id'],
                          text=constants.on_failed_kick_response)
 
 
-def on_hashtag_message(bot: telegram.Bot, update: telegram.Update, user_data: dict, job_queue: telegram.ext.JobQueue):
+def on_hashtag_message(bot: Bot, update: Update, user_data: dict, job_queue: JobQueue):
     if not update.message:
         update.message = update.edited_message
 
@@ -219,12 +223,12 @@ def on_hashtag_message(bot: telegram.Bot, update: telegram.Update, user_data: di
         if removed:
             message_markdown = mention_markdown(bot, chat_id, user_id, message)
             update.message.reply_text(
-                message_markdown, parse_mode=telegram.ParseMode.MARKDOWN)
+                message_markdown, parse_mode=ParseMode.MARKDOWN)
 
     else:
         on_message(bot, update, user_data=user_data, job_queue=job_queue)
 
-def get_chats(users: list[User], user_id: int, bot: telegram.Bot):
+def get_chats(users: list[User], user_id: int, bot: Bot):
     for x in users:
         try:
             if authorize_user(bot, x.chat_id, user_id):
@@ -232,7 +236,7 @@ def get_chats(users: list[User], user_id: int, bot: telegram.Bot):
         except Exception:
             pass
 
-def on_start_command(bot: telegram.Bot, update: telegram.Update, user_data: dict):
+def on_start_command(bot: Bot, update: Update, user_data: dict):
     user_id = update.message.chat_id
 
     if user_id < 0:
@@ -255,7 +259,7 @@ def on_start_command(bot: telegram.Bot, update: telegram.Update, user_data: dict
         constants.on_start_command, reply_markup=reply_markup)
 
 
-def on_button_click(bot: telegram.Bot, update: telegram.Update, user_data: dict):
+def on_button_click(bot: Bot, update: Update, user_data: dict):
     query = update.callback_query
     data = json.loads(query.data)
 
@@ -334,7 +338,7 @@ def on_button_click(bot: telegram.Bot, update: telegram.Update, user_data: dict)
         with session_scope() as sess:
             chat = sess.query(Chat).filter(Chat.id == data['chat_id']).first()
             bot.edit_message_text(text=constants.get_settings_message.format(**chat.__dict__),
-                                  parse_mode=telegram.ParseMode.MARKDOWN,
+                                  parse_mode=ParseMode.MARKDOWN,
                                   chat_id=query.message.chat_id,
                                   message_id=query.message.message_id,
                                   reply_markup=reply_markup)
@@ -342,7 +346,7 @@ def on_button_click(bot: telegram.Bot, update: telegram.Update, user_data: dict)
         user_data['action'] = None
 
 
-def filter_message(chat_id: int, message: telegram.Message):
+def filter_message(chat_id: int, message: Message):
     if not message:
         return False
 
@@ -355,8 +359,7 @@ def filter_message(chat_id: int, message: telegram.Message):
             return re.search(chat.regex_filter, message)
 
 
-
-def on_forward(bot: telegram.Bot, update: telegram.Update, job_queue: telegram.ext.JobQueue):
+def on_forward(bot: Bot, update: Update, job_queue: JobQueue):
     chat_id = update.message.chat_id
     user_id = update.message.from_user.id
     removed = False
@@ -385,7 +388,7 @@ def on_forward(bot: telegram.Bot, update: telegram.Update, job_queue: telegram.e
                 bot, chat_id, user_id, constants.on_filtered_message)
             message = bot.send_message(chat_id,
                                        text=message_markdown,
-                                       parse_mode=telegram.ParseMode.MARKDOWN)
+                                       parse_mode=ParseMode.MARKDOWN)
             bot.kick_chat_member(chat_id, user_id, until_date=datetime.now() + timedelta(seconds=60))
 
 
@@ -403,7 +406,7 @@ def is_chat_filters_new_users(chat_id: int):
         return filter_only_new_users
 
 
-def on_message(bot: telegram.Bot, update: telegram.Update, user_data: dict, job_queue: telegram.ext.JobQueue):
+def on_message(bot: Bot, update: Update, user_data: dict, job_queue: JobQueue):
     if not update.message:
         update.message = update.edited_message
 
@@ -436,7 +439,7 @@ def on_message(bot: telegram.Bot, update: telegram.Update, user_data: dict, job_
                     job.schedule_removal()
             message = bot.send_message(chat_id,
                                        text=message_markdown,
-                                       parse_mode=telegram.ParseMode.MARKDOWN)
+                                       parse_mode=ParseMode.MARKDOWN)
             bot.kick_chat_member(chat_id, user_id, until_date=datetime.now() + timedelta(seconds=60))
     else:
         user_id = chat_id
@@ -522,7 +525,7 @@ def on_message(bot: telegram.Bot, update: telegram.Update, user_data: dict, job_
                 constants.on_set_new_message, reply_markup=reply_markup)
 
 
-def on_whois_command(bot: telegram.Bot, update: telegram.Update, args: list):
+def on_whois_command(bot: Bot, update: Update, args: list):
     if len(args) != 1:
         update.message.reply_text("Usage: /whois <user_id>")
 
