@@ -1,22 +1,22 @@
 from enum import IntEnum, auto
 
 # MESSAGES
-on_set_new_message = 'Обновил сообщение.'
-on_success_set_kick_timeout_response = 'Обновил таймаут кика.'
-on_failed_set_kick_timeout_response = 'Таймаут должен быть целым положительным числом'
-on_failed_kick_response = 'Я не справился.'
-on_failed_skip = 'Ответьте на сообщение пользователя которого не нужно кикать'
-on_success_skip = 'Теперь пользователю не нужно представляться.'
+on_set_new_message = "Обновил сообщение."
+on_success_set_kick_timeout_response = "Обновил таймаут кика."
+on_failed_set_kick_timeout_response = "Таймаут должен быть целым положительным числом"
+on_failed_kick_response = "Я не справился."
+on_failed_skip = "Ответьте на сообщение пользователя которого не нужно кикать"
+on_success_skip = "Теперь пользователю не нужно представляться."
 on_success_kick_response = "%USER\_MENTION% не представился и был кикнут из чата."
-on_start_command = 'Выберите чат и действие:'
-on_filtered_message = '%USER\_MENTION%, вы были забанены т.к ваше сообщение содержит репост или слово из спам листа'
+on_start_command = "Выберите чат и действие:"
+on_filtered_message = "%USER\_MENTION%, вы были забанены т.к ваше сообщение содержит репост или слово из спам листа"
 skip_on_new_chat_member_message = "%SKIP%"
-help_message = '''Привет. Для начала работы добавь меня в чат.
+help_message = """Привет. Для начала работы добавь меня в чат.
 Для настройки бота админу нужно представиться в чате (написать сообщение с #whois длинной больше 120 символов) и написать мне в личных сообщениях /start.
 По умолчанию я не кикаю непредставившихся, а лишь записываю все сообщения с тегом #whois.
 Если нужно кикать, то установи таймаут кика в значение больше нуля (в минутах).
 За 10 минут до кика я отправляю сообщение с напоминанием.
-'''
+"""
 
 get_settings_message = """
 Таймаут кика: {kick_timeout}
@@ -57,13 +57,13 @@ class Actions(IntEnum):
 
 
 RH_kick_messages = [
-    'Хакер %USER\_MENTION% молчит и покидает чат. ⚰',
-    'Хакера %USER\_MENTION% забрал роскомнадзор',
-    'Хакера %USER\_MENTION% забрал Интерпол',
-    'Хакер %USER\_MENTION% провалил дедлайн',
-    'Хакер %USER\_MENTION% не смог выйти из VIM',
-    'Хакер %USER\_MENTION% пошёл кормить рыбок',
-    'Хакер %USER\_MENTION% провалил испытание'
+    "Хакер %USER\_MENTION% молчит и покидает чат. ⚰",
+    "Хакера %USER\_MENTION% забрал роскомнадзор",
+    "Хакера %USER\_MENTION% забрал Интерпол",
+    "Хакер %USER\_MENTION% провалил дедлайн",
+    "Хакер %USER\_MENTION% не смог выйти из VIM",
+    "Хакер %USER\_MENTION% пошёл кормить рыбок",
+    "Хакер %USER\_MENTION% провалил испытание",
 ]
 
 RH_CHAT_ID = -1001147286684
