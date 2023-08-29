@@ -8,6 +8,9 @@ name = "pypi"
 python-telegram-bot = "*"
 sqlalchemy = "*"
 alembic = "*"
+pre-commit = "*"
+pylint = "*"
+black = "*"
 
 [dev-packages]
 "autopep8" = "*"
