@@ -11,8 +11,8 @@ from telegram import (
 from telegram.ext import Job, JobQueue
 from telegram.error import TelegramError
 from datetime import datetime, timedelta
-from model import Chat, User, session_scope, orm_to_dict
-import constants
+from .model import Chat, User, session_scope, orm_to_dict
+from . import constants
 import re
 import random
 import typing
@@ -771,3 +771,4 @@ def on_whois_command(bot: Bot, update: Update, args: list):
             return
 
         update.message.reply_text(f"whois: {user.whois}")
+
