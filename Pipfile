@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 "psycopg2-binary" = "*"
-python-telegram-bot = "*"
+python-telegram-bot = {version = "==13.12"}
 sqlalchemy = "*"
 alembic = "*"
 pre-commit = "*"
