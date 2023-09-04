@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 "psycopg2-binary" = "*"
-python-telegram-bot = "*"
+python-telegram-bot = {version = "==13.12"}
 sqlalchemy = "*"
 alembic = "*"
 pre-commit = "*"
@@ -17,4 +17,4 @@ pyTelegramLogger = "*"
 "autopep8" = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.9"

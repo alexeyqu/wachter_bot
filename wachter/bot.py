@@ -8,6 +8,7 @@ from telegram.ext import (
 from custom_filters import filter_bot_added
 import actions
 import logging
+from logging import config
 import os
 
 
@@ -29,7 +30,7 @@ log_config = {
     }
 }
 
-logging.config.dictConfig(log_config)
+config.dictConfig(log_config)
 logger = logging.getLogger("telegram")
 
 
