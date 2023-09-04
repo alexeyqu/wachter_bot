@@ -1,14 +1,9 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-
--   repo: local
+-   repo: https://github.com/psf/black
+    rev: 23.9.1
     hooks:
     -   id: black
-        name: black
-        entry: bash -c 'pipenv run black $@' --
-        language: system
-        types: [python]
-        args: []
         exclude: ^(.+)/migrations/.*\.py
         
