@@ -5,8 +5,8 @@ from telegram.ext import (
     MessageHandler,
     CallbackQueryHandler,
 )
-from custom_filters import filter_bot_added
-import actions
+from .custom_filters import filter_bot_added
+from . import actions
 import os
 
 

@@ -771,4 +771,3 @@ def on_whois_command(bot: Bot, update: Update, args: list):
             return
 
         update.message.reply_text(f"whois: {user.whois}")
-

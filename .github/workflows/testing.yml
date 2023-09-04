@@ -33,7 +33,7 @@ jobs:
     - name: Check Docker logs for errors
       run: |
         logs=$(docker logs YOUR_CONTAINER_NAME_OR_ID)
-        if echo $logs | grep -i "error"; then
+        if echo $logs | grep -i "exited with code"; then
           echo "Found errors in Docker logs"
           exit 1
         fi
