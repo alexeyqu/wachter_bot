@@ -1,15 +1,6 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
--   repo: local
-    hooks:
-    -   id: pylint
-        name: pylint
-        entry: bash -c 'pipenv run pylint $@' --
-        language: system
-        types: [python]
-        args: []
-        exclude: ^(.+)/migrations/.*\.py
 
 -   repo: local
     hooks:

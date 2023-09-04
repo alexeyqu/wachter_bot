@@ -1,0 +1,39 @@
+name: Testing on pull requests
+
+on:
+  pull_request:
+    branches:
+      - dev
+jobs:
+  docker-compose-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Build and Run Docker Compose
+      run: |
+        docker-compose -f docker-compose.dev.yml up 
+
+    - name: Run pre-commit on Changed Files
+      run: |
+        # Get list of changed files
+        FILES=$(git diff --name-only HEAD^ HEAD)
+        
+        # Execute black inside container
+        docker exec wachter-dev bash -c "pipenv run pre-commit run black --all-files $FILES"
+        
+        # Check if black made any changes
+        if [ "$(git status --porcelain)" ]; then
+          echo "Changes were made by black. Please format your code before pushing."
+          exit 1
+        fi
+
+    - name: Check Docker logs for errors
+      run: |
+        logs=$(docker logs YOUR_CONTAINER_NAME_OR_ID)
+        if echo $logs | grep -i "exited with code"; then
+          echo "Found errors in Docker logs"
+          exit 1
+        fi
