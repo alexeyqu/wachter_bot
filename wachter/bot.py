@@ -7,7 +7,30 @@ from telegram.ext import (
 )
 from custom_filters import filter_bot_added
 import actions
+import logging
 import os
+
+
+log_config = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "telegram": {
+            "class": "telegram_logger.TelegramHandler",
+            "token": os.environ["TELEGRAM_TOKEN"],
+            "chat_ids": [os.environ["TELEGRAM_ERROR_CHAT_ID"]],
+        }
+    },
+    "loggers": {
+        "telegram": {
+            "level": "INFO",
+            "handlers": ["telegram",]
+        }
+    }
+}
+
+logging.config.dictConfig(log_config)
+logger = logging.getLogger("telegram")
 
 
 def main():
@@ -58,6 +81,8 @@ def main():
 
     updater.start_polling()
     updater.idle()
+
+    logger.info("Bot has started successfully")
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ alembic = "*"
 pre-commit = "*"
 pylint = "*"
 black = "*"
+pyTelegramLogger = "*"
 
 [dev-packages]
 "autopep8" = "*"
