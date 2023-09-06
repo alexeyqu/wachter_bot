@@ -16,13 +16,13 @@ jobs:
         fetch-depth: 0  # fetches all commits
 
 
-    - name: Build and Run Docker Compose
+    - name: Build and run docker compose
       env:
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_AUTOTEST_TOKEN }}
       run: |
         docker-compose -f docker-compose.dev.yml up -d 
 
-    - name: Check Docker logs for errors
+    - name: Check docker logs for errors
       run: |
         # Sleep for 10 seconds to let the container initialize
         sleep 10
@@ -32,7 +32,7 @@ jobs:
           exit 1
         fi
 
-    - name: Run pre-commit on Changed Files
+    - name: Run black on changed files
       run: |
         # Get list of changed files
           BASE_SHA=$(git rev-parse origin/${GITHUB_BASE_REF})
