@@ -8,6 +8,7 @@ from telegram import (
     InlineKeyboardMarkup,
     ParseMode,
 )
+print("fdf")
 from telegram.ext import Job, JobQueue
 from telegram.error import TelegramError
 from datetime import datetime, timedelta
