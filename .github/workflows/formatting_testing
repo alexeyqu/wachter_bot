@@ -24,4 +24,4 @@ jobs:
       run: pipenv install pre-commit, black
 
     - name: Run pre-commit
-      run: pipenv run pre-commit
+    - uses: pre-commit/action@v3.0.0
