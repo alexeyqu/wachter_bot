@@ -3,9 +3,8 @@ import logging
 from telegram import Update
 from telegram.ext import CallbackContext
 
-# todo use telegram logger here
-logger = logging.getLogger(__name__)
+from src.logging import tg_logger
 
 
 def error_handler(update: Update, context: CallbackContext):
-    logger.warning(f'Update "{update}" caused error "{context.error}"')
+    tg_logger.warning(f'Update "{update}" caused error "{context.error}"')

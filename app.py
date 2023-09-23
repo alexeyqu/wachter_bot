@@ -6,32 +6,9 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 from src.custom_filters import filter_bot_added
+from src.logging import tg_logger
 from src import handlers
-import logging
-from logging import config
 import os
-
-
-log_config = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "telegram": {
-            "class": "telegram_logger.TelegramHandler",
-            "token": os.environ["TELEGRAM_TOKEN"],
-            "chat_ids": [os.environ["TELEGRAM_ERROR_CHAT_ID"]],
-        }
-    },
-    "loggers": {
-        "telegram": {
-            "level": "INFO",
-            "handlers": ["telegram",]
-        }
-    }
-}
-
-config.dictConfig(log_config)
-logger = logging.getLogger("telegram")
 
 
 def main():
@@ -73,7 +50,7 @@ def main():
     dp.add_handler(CallbackQueryHandler(handlers.button_handler, pass_user_data=True))
 
     updater.start_polling()
-    logger.info("Bot has started successfully")
+    tg_logger.info("Bot has started successfully")
     updater.idle()
 
 
