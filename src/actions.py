@@ -52,42 +52,6 @@ def on_help_command(update: Update, context: CallbackContext):
     update.message.reply_text(constants.help_message)
 
 
-def on_skip_command(bot: Bot, update: Update, job_queue: JobQueue):
-    chat_id = update.message.chat_id
-
-    if chat_id > 0:
-        return
-
-    if not update.message:
-        update.message = update.edited_message
-
-    if update.message.reply_to_message is not None:
-        user_id = update.message.reply_to_message.from_user.id
-
-        if not authorize_user(bot, chat_id, user_id):
-            return
-        removed = False
-        for job in job_queue.jobs():
-            if (
-                job.context["user_id"] == user_id
-                and job.context["chat_id"] == chat_id
-                and job.enabled == True
-            ):
-                try:
-                    bot.delete_message(
-                        job.context["chat_id"], job.context["message_id"]
-                    )
-                except:
-                    pass
-                job.enabled = False
-                job.schedule_removal()
-                removed = True
-        if removed:
-            update.message.reply_text(constants.on_success_skip)
-    else:
-        update.message.reply_text(constants.on_failed_skip)
-
-
 def on_new_chat_member(bot: Bot, update: Update, job_queue: JobQueue):
     chat_id = update.message.chat_id
     user_id = update.message.new_chat_members[-1].id
@@ -426,28 +390,6 @@ def on_button_click(bot: Bot, update: Update, user_data: dict):
             ],
             [
                 InlineKeyboardButton(
-                    "Изменить regex для фильтра сообщений",
-                    callback_data=json.dumps(
-                        {
-                            "chat_id": selected_chat_id,
-                            "action": constants.Actions.set_regex_filter,
-                        }
-                    ),
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    "Изменить фильтрацию только для новых пользователей",
-                    callback_data=json.dumps(
-                        {
-                            "chat_id": selected_chat_id,
-                            "action": constants.Actions.set_filter_only_new_users,
-                        }
-                    ),
-                )
-            ],
-            [
-                InlineKeyboardButton(
                     "Получить текущие настройки",
                     callback_data=json.dumps(
                         {
@@ -473,8 +415,6 @@ def on_button_click(bot: Bot, update: Update, user_data: dict):
         constants.Actions.set_on_known_new_chat_member_message_response,
         constants.Actions.set_on_successful_introducion_response,
         constants.Actions.set_on_kick_message,
-        constants.Actions.set_regex_filter,
-        constants.Actions.set_filter_only_new_users,
     ]:
         bot.edit_message_text(
             text="Отправьте новое значение",
@@ -519,59 +459,6 @@ def on_button_click(bot: Bot, update: Update, user_data: dict):
         user_data["action"] = None
 
 
-def filter_message(chat_id: int, message: Message):
-    if not message:
-        return False
-
-    with session_scope() as sess:
-        chat = sess.query(Chat).filter(Chat.id == chat_id).first()
-
-        if chat.regex_filter is None:
-            return False
-        else:
-            return re.search(chat.regex_filter, message)
-
-
-def on_forward(bot: Bot, update: Update, job_queue: JobQueue):
-    chat_id = update.message.chat_id
-    user_id = update.message.from_user.id
-    removed = False
-
-    if chat_id < 0 and not authorize_user(bot, chat_id, user_id):
-        with session_scope() as sess:
-            chat = sess.query(Chat).filter(Chat.id == chat_id == chat_id).first()
-            if chat.regex_filter is None:
-                return
-
-        for job in job_queue.jobs():
-            if (
-                job.context["user_id"] == user_id
-                and job.context["chat_id"] == chat_id
-                and job.enabled == True
-            ):
-                removed = True
-                try:
-                    bot.delete_message(
-                        job.context["chat_id"], job.context["message_id"]
-                    )
-                except:
-                    pass
-                job.enabled = False
-                job.schedule_removal()
-
-        if removed:
-            bot.delete_message(chat_id, update.message.message_id)
-            message_markdown = mention_markdown(
-                bot, chat_id, user_id, constants.on_filtered_message
-            )
-            message = bot.send_message(
-                chat_id, text=message_markdown, parse_mode=ParseMode.MARKDOWN
-            )
-            bot.kick_chat_member(
-                chat_id, user_id, until_date=datetime.now() + timedelta(seconds=60)
-            )
-
-
 def is_new_user(chat_id: int, user_id: int):
     with session_scope() as sess:
         #  if user is not in database he hasn't introduced himself with #whois
@@ -584,61 +471,13 @@ def is_new_user(chat_id: int, user_id: int):
         return is_new
 
 
-def is_chat_filters_new_users(chat_id: int):
-    with session_scope() as sess:
-        filter_only_new_users = (
-            sess.query(Chat.filter_only_new_users).filter(Chat.id == chat_id).first()
-        )
-        return filter_only_new_users
-
-
 def on_message(bot: Bot, update: Update, user_data: dict, job_queue: JobQueue):
     if not update.message:
         update.message = update.edited_message
 
     chat_id = update.message.chat_id
 
-    if chat_id < 0:
-        user_id = update.message.from_user.id
-        if update.message.forward_from:
-            on_forward(bot, update, job_queue)
-            return
-
-        message_text = update.message.text or update.message.caption
-        filter_mask = not authorize_user(bot, chat_id, user_id) and filter_message(
-            chat_id, message_text
-        )
-
-        if is_chat_filters_new_users(chat_id):
-            filter_mask = filter_mask and is_new_user(chat_id, user_id)
-
-        if filter_mask:
-            bot.delete_message(chat_id, update.message.message_id)
-            message_markdown = mention_markdown(
-                bot, chat_id, user_id, constants.on_filtered_message
-            )
-            for job in job_queue.jobs():
-                if (
-                    job.context["user_id"] == user_id
-                    and job.context["chat_id"] == chat_id
-                    and job.enabled == True
-                ):
-                    try:
-                        bot.delete_message(
-                            job.context["chat_id"], job.context["message_id"]
-                        )
-                    except:
-                        pass
-                    job.enabled = False
-                    job.schedule_removal()
-            message = bot.send_message(
-                chat_id, text=message_markdown, parse_mode=ParseMode.MARKDOWN
-            )
-            bot.kick_chat_member(
-                chat_id, user_id, until_date=datetime.now() + timedelta(seconds=60)
-            )
-    else:
-        user_id = chat_id
+    if chat_id > 0:
         action = user_data.get("action")
 
         if action is None:
@@ -692,8 +531,6 @@ def on_message(bot: Bot, update: Update, user_data: dict, job_queue: JobQueue):
             constants.Actions.set_on_known_new_chat_member_message_response,
             constants.Actions.set_on_successful_introducion_response,
             constants.Actions.set_on_kick_message,
-            constants.Actions.set_regex_filter,
-            constants.Actions.set_filter_only_new_users,
         ]:
             message = update.message.text_markdown
             with session_scope() as sess:
@@ -710,19 +547,6 @@ def on_message(bot: Bot, update: Update, user_data: dict, job_queue: JobQueue):
                     chat = Chat(id=chat_id, notify_message=message)
                 if action == constants.Actions.set_on_kick_message:
                     chat = Chat(id=chat_id, on_kick_message=message)
-                if action == constants.Actions.set_filter_only_new_users:
-                    if message.lower() in ["true", "1"]:
-                        filter_only_new_users = True
-                    else:
-                        filter_only_new_users = False
-                    chat = Chat(id=chat_id, filter_only_new_users=filter_only_new_users)
-
-                if action == constants.Actions.set_regex_filter:
-                    if message == "%TURN_OFF%":
-                        chat = Chat(id=chat_id, regex_filter=None)
-                    else:
-                        message = update.message.text
-                        chat = Chat(id=chat_id, regex_filter=message)
                 sess.merge(chat)
 
             user_data["action"] = None
@@ -751,24 +575,3 @@ def on_message(bot: Bot, update: Update, user_data: dict, job_queue: JobQueue):
             update.message.reply_text(
                 constants.on_set_new_message, reply_markup=reply_markup
             )
-
-
-def on_whois_command(bot: Bot, update: Update, args: list):
-    if len(args) != 1:
-        update.message.reply_text("Usage: /whois <user_id>")
-
-    chat_id = update.message.chat_id
-    user_id = args[0]  # TODO: Use username instead of user_id
-
-    with session_scope() as sess:
-        user = (
-            sess.query(User)
-            .filter(User.chat_id == chat_id, User.user_id == user_id)
-            .first()
-        )
-
-        if user is None:
-            update.message.reply_text("user not found")
-            return
-
-        update.message.reply_text(f"whois: {user.whois}")
