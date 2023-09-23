@@ -8,7 +8,7 @@ from telegram import (
     InlineKeyboardMarkup,
     ParseMode,
 )
-from telegram.ext import Job, JobQueue
+from telegram.ext import CallbackContext, Job, JobQueue
 from telegram.error import TelegramError
 from datetime import datetime, timedelta
 from src.model import Chat, User, session_scope, orm_to_dict
@@ -47,7 +47,8 @@ def mention_markdown(bot: Bot, chat_id: int, user_id: int, message: Message):
     return message.replace("%USER\_MENTION%", user_mention_markdown)
 
 
-def on_help_command(bot: Bot, update: Update):
+def on_help_command(update: Update, context: CallbackContext):
+    print(update)
     update.message.reply_text(constants.help_message)
 
 
