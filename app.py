@@ -6,7 +6,7 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 from src.custom_filters import filter_bot_added
-from src import actions
+from src import handlers
 import logging
 from logging import config
 import os
@@ -38,38 +38,39 @@ def main():
     updater = Updater(os.environ["TELEGRAM_TOKEN"])
     dp = updater.dispatcher
 
-    dp.add_handler(CommandHandler("help", actions.on_help_command))
-    dp.add_error_handler(actions.on_error)
+    dp.add_handler(CommandHandler("help", handlers.help_handler))
+    dp.add_error_handler(handlers.error_handler)
 
-    dp.add_handler(
-        MessageHandler(
-            Filters.status_update.new_chat_members & filter_bot_added,
-            actions.on_new_chat_member,
-            pass_job_queue=True,
-        )
-    )
+    # group UX
     dp.add_handler(
         MessageHandler(
             Filters.entity("hashtag"),
-            actions.on_hashtag_message,
+            handlers.on_hashtag_message,
             pass_job_queue=True,
-            edited_updates=True,
             pass_user_data=True,
         )
     )
-    dp.add_handler(
-        CommandHandler("start", actions.on_start_command, pass_user_data=True)
-    )
-
-    dp.add_handler(CallbackQueryHandler(actions.on_button_click, pass_user_data=True))
     dp.add_handler(
         MessageHandler(
             (Filters.text | Filters.entity),
-            actions.on_message,
+            handlers.message_handler,
             pass_user_data=True,
             pass_job_queue=True,
         )
     )
+
+    # admin UX
+    dp.add_handler(
+        CommandHandler("start", handlers.start_handler, pass_user_data=True)
+    )
+    dp.add_handler(
+        MessageHandler(
+            Filters.status_update.new_chat_members & filter_bot_added,
+            handlers.on_new_chat_member,
+            pass_job_queue=True,
+        )
+    )
+    dp.add_handler(CallbackQueryHandler(handlers.button_handler, pass_user_data=True))
 
     updater.start_polling()
     logger.info("Bot has started successfully")
