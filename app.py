@@ -16,7 +16,6 @@ def main():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("help", handlers.help_handler))
-    dp.add_error_handler(handlers.error_handler)
 
     # group UX
     dp.add_handler(
@@ -29,9 +28,8 @@ def main():
     )
     dp.add_handler(
         MessageHandler(
-            (Filters.text | Filters.entity),
-            handlers.message_handler,
-            pass_user_data=True,
+            Filters.status_update.new_chat_members & filter_bot_added,
+            handlers.on_new_chat_member,
             pass_job_queue=True,
         )
     )
@@ -40,14 +38,16 @@ def main():
     dp.add_handler(
         CommandHandler("start", handlers.start_handler, pass_user_data=True)
     )
+    dp.add_handler(CallbackQueryHandler(handlers.button_handler, pass_user_data=True))
     dp.add_handler(
         MessageHandler(
-            Filters.status_update.new_chat_members & filter_bot_added,
-            handlers.on_new_chat_member,
+            (Filters.text | Filters.entity),
+            handlers.message_handler,
+            pass_user_data=True,
             pass_job_queue=True,
         )
     )
-    dp.add_handler(CallbackQueryHandler(handlers.button_handler, pass_user_data=True))
+    dp.add_error_handler(handlers.error_handler)
 
     updater.start_polling()
     tg_logger.info("Bot has started successfully")
