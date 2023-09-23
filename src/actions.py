@@ -8,7 +8,7 @@ from telegram import (
     InlineKeyboardMarkup,
     ParseMode,
 )
-from telegram.ext import Job, JobQueue
+from telegram.ext import CallbackContext, Job, JobQueue
 from telegram.error import TelegramError
 from datetime import datetime, timedelta
 from src.model import Chat, User, session_scope, orm_to_dict
@@ -23,8 +23,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def on_error(bot: Bot, update: Update, error: TelegramError):
-    logger.warning(f'Update "{update}" caused error "{error}"')
+def on_error(update: Update, context: CallbackContext):
+    logger.warning(f'Update "{update}" caused error "{context.error}"')
 
 
 def authorize_user(bot: Bot, chat_id: int, user_id: int):
@@ -47,15 +47,15 @@ def mention_markdown(bot: Bot, chat_id: int, user_id: int, message: Message):
     return message.replace("%USER\_MENTION%", user_mention_markdown)
 
 
-def on_help_command(bot: Bot, update: Update):
+def on_help_command(update: Update, _: CallbackContext):
     update.message.reply_text(constants.help_message)
 
 
-def on_new_chat_member(bot: Bot, update: Update, job_queue: JobQueue):
+def on_new_chat_member(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     user_id = update.message.new_chat_members[-1].id
 
-    for job in job_queue.jobs():
+    for job in context.job_queue.jobs():
         if (
             job.context["user_id"] == user_id
             and job.context["chat_id"] == chat_id
@@ -87,22 +87,22 @@ def on_new_chat_member(bot: Bot, update: Update, job_queue: JobQueue):
     if message == constants.skip_on_new_chat_member_message:
         return
 
-    message_markdown = mention_markdown(bot, chat_id, user_id, message)
+    message_markdown = mention_markdown(context.bot, chat_id, user_id, message)
     msg = update.message.reply_text(message_markdown, parse_mode=ParseMode.MARKDOWN)
 
     if timeout != 0:
         if timeout >= 10:
-            job = job_queue.run_once(
+            job = context.job_queue.run_once(
                 on_notify_timeout,
                 (timeout - constants.notify_delta) * 60,
                 context={
                     "chat_id": chat_id,
                     "user_id": user_id,
-                    "job_queue": job_queue,
+                    "job_queue": context.job_queue,
                 },
             )
 
-        job = job_queue.run_once(
+        job = context.job_queue.run_once(
             on_kick_timeout,
             timeout * 60,
             context={
@@ -113,7 +113,8 @@ def on_new_chat_member(bot: Bot, update: Update, job_queue: JobQueue):
         )
 
 
-def on_notify_timeout(bot: Bot, job: Job):
+def on_notify_timeout(context: CallbackContext):
+    bot, job = context.bot, context.job
     with session_scope() as sess:
         chat = sess.query(Chat).filter(Chat.id == job.context["chat_id"]).first()
 
@@ -136,17 +137,16 @@ def on_notify_timeout(bot: Bot, job: Job):
         )
 
 
-def delete_message(bot: Bot, job: Job):
-    logger.info("delete called")
+def delete_message(context: CallbackContext):
+    bot, job = context.bot, context.job
     try:
         bot.delete_message(job.context["chat_id"], job.context["message_id"])
-        logger.info("delete sucess")
     except:
-        logger.info("suck")
         print(f"can't delete {job.context['message_id']} from {job.context['chat_id']}")
 
 
-def on_kick_timeout(bot: Bot, job: Job):
+def on_kick_timeout(context: CallbackContext):
+    bot, job = context.bot, context.job
     try:
         bot.delete_message(job.context["chat_id"], job.context["message_id"])
     except:
@@ -186,7 +186,7 @@ def on_kick_timeout(bot: Bot, job: Job):
         bot.send_message(job.context["chat_id"], text=constants.on_failed_kick_response)
 
 
-def on_hashtag_message(bot: Bot, update: Update, user_data: dict, job_queue: JobQueue):
+def on_hashtag_message(update: Update, context: CallbackContext):
     if not update.message:
         update.message = update.edited_message
 
@@ -214,14 +214,14 @@ def on_hashtag_message(bot: Bot, update: Update, user_data: dict, job_queue: Job
             sess.merge(user)
 
         removed = False
-        for job in job_queue.jobs():
+        for job in context.job_queue.jobs():
             if (
                 job.context["user_id"] == user_id
                 and job.context["chat_id"] == chat_id
                 and job.enabled == True
             ):
                 try:
-                    bot.delete_message(
+                    context.bot.delete_message(
                         job.context["chat_id"], job.context["message_id"]
                     )
                 except:
@@ -231,11 +231,11 @@ def on_hashtag_message(bot: Bot, update: Update, user_data: dict, job_queue: Job
                 removed = True
 
         if removed:
-            message_markdown = mention_markdown(bot, chat_id, user_id, message)
+            message_markdown = mention_markdown(context.bot, chat_id, user_id, message)
             update.message.reply_text(message_markdown, parse_mode=ParseMode.MARKDOWN)
 
     else:
-        on_message(bot, update, user_data=user_data, job_queue=job_queue)
+        on_message(update, context)
 
 
 def get_chats(users: list, user_id: int, bot: Bot):
@@ -250,7 +250,7 @@ def get_chats(users: list, user_id: int, bot: Bot):
             pass
 
 
-def on_start_command(bot: Bot, update: Update, user_data: dict):
+def on_start_command(update: Update, context: CallbackContext):
     user_id = update.message.chat_id
 
     if user_id < 0:
@@ -258,7 +258,7 @@ def on_start_command(bot: Bot, update: Update, user_data: dict):
 
     with session_scope() as sess:
         users = sess.query(User).filter(User.user_id == user_id)
-        user_chats = list(get_chats(users, user_id, bot))
+        user_chats = list(get_chats(users, user_id, context.bot))
 
     if len(user_chats) == 0:
         update.message.reply_text("У вас нет доступных чатов.")
@@ -274,14 +274,14 @@ def on_start_command(bot: Bot, update: Update, user_data: dict):
             )
         ]
         for chat in user_chats
-        if authorize_user(bot, chat["id"], user_id)
+        if authorize_user(context.bot, chat["id"], user_id)
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text(constants.on_start_command, reply_markup=reply_markup)
 
 
-def on_button_click(bot: Bot, update: Update, user_data: dict):
+def on_button_click(update: Update, context: CallbackContext):
     query = update.callback_query
     data = json.loads(query.data)
 
@@ -290,7 +290,7 @@ def on_button_click(bot: Bot, update: Update, user_data: dict):
             user_id = query.from_user.id
             users = sess.query(User).filter(User.user_id == user_id)
             user_chats = [
-                {"title": bot.get_chat(x.chat_id).title or x.chat_id, "id": x.chat_id}
+                {"title": context.bot.get_chat(x.chat_id).title or x.chat_id, "id": x.chat_id}
                 for x in users
             ]
 
@@ -308,11 +308,11 @@ def on_button_click(bot: Bot, update: Update, user_data: dict):
                 )
             ]
             for chat in user_chats
-            if authorize_user(bot, chat["id"], user_id)
+            if authorize_user(context.bot, chat["id"], user_id)
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
-        bot.edit_message_reply_markup(
+        context.bot.edit_message_reply_markup(
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -401,7 +401,7 @@ def on_button_click(bot: Bot, update: Update, user_data: dict):
         ]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
-        bot.edit_message_reply_markup(
+        context.bot.edit_message_reply_markup(
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -415,13 +415,13 @@ def on_button_click(bot: Bot, update: Update, user_data: dict):
         constants.Actions.set_on_successful_introducion_response,
         constants.Actions.set_on_kick_message,
     ]:
-        bot.edit_message_text(
+        context.bot.edit_message_text(
             text="Отправьте новое значение",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
         )
-        user_data["chat_id"] = data["chat_id"]
-        user_data["action"] = data["action"]
+        context.user_data["chat_id"] = data["chat_id"]
+        context.user_data["action"] = data["action"]
 
     elif data["action"] == constants.Actions.get_current_settings:
         keyboard = [
@@ -447,7 +447,7 @@ def on_button_click(bot: Bot, update: Update, user_data: dict):
         reply_markup = InlineKeyboardMarkup(keyboard)
         with session_scope() as sess:
             chat = sess.query(Chat).filter(Chat.id == data["chat_id"]).first()
-            bot.edit_message_text(
+            context.bot.edit_message_text(
                 text=constants.get_settings_message.format(**chat.__dict__),
                 parse_mode=ParseMode.MARKDOWN,
                 chat_id=query.message.chat_id,
@@ -455,7 +455,7 @@ def on_button_click(bot: Bot, update: Update, user_data: dict):
                 reply_markup=reply_markup,
             )
 
-        user_data["action"] = None
+        context.user_data["action"] = None
 
 
 def is_new_user(chat_id: int, user_id: int):
@@ -470,19 +470,19 @@ def is_new_user(chat_id: int, user_id: int):
         return is_new
 
 
-def on_message(bot: Bot, update: Update, user_data: dict, job_queue: JobQueue):
+def on_message(update: Update, context: CallbackContext):
     if not update.message:
         update.message = update.edited_message
 
     chat_id = update.message.chat_id
 
     if chat_id > 0:
-        action = user_data.get("action")
+        action = context.user_data.get("action")
 
         if action is None:
             return
 
-        chat_id = user_data["chat_id"]
+        chat_id = context.user_data["chat_id"]
 
         if action == constants.Actions.set_kick_timeout:
             message = update.message.text
@@ -496,7 +496,7 @@ def on_message(bot: Bot, update: Update, user_data: dict, job_queue: JobQueue):
             with session_scope() as sess:
                 chat = Chat(id=chat_id, kick_timeout=timeout)
                 sess.merge(chat)
-            user_data["action"] = None
+            context.user_data["action"] = None
 
             keyboard = [
                 [
@@ -548,7 +548,7 @@ def on_message(bot: Bot, update: Update, user_data: dict, job_queue: JobQueue):
                     chat = Chat(id=chat_id, on_kick_message=message)
                 sess.merge(chat)
 
-            user_data["action"] = None
+            context.user_data["action"] = None
 
             keyboard = [
                 [
