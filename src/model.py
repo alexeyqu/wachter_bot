@@ -1,11 +1,9 @@
 from sqlalchemy import create_engine
-from sqlalchemy import Column, Integer, String, Text, Boolean, BigInteger
+from sqlalchemy import Column, Integer, Text, Boolean, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.session import sessionmaker
 from contextlib import contextmanager
-import enum
 import os
-from sqlalchemy import inspect
 
 Base = declarative_base()
 
@@ -32,8 +30,8 @@ class Chat(Base):
         nullable=False,
         default="%USER\_MENTION%, пожалуйста, представьтесь и поздоровайтесь с сообществом.",
     )
-    regex_filter = Column(Text, nullable=True)
-    filter_only_new_users = Column(Boolean, nullable=False, default=False)
+    regex_filter = Column(Text, nullable=True)  # keeping that in db for now, unused
+    filter_only_new_users = Column(Boolean, nullable=False, default=False)  # keeping that in db for now, unused
     kick_timeout = Column(Integer, nullable=False, default=0)
 
     def __repr__(self):
