@@ -53,22 +53,24 @@ def on_new_chat_member(update: Update, context: CallbackContext):
     if timeout != 0:
         if timeout >= 10:
             job = context.job_queue.run_once(
-                _on_notify_timeout,
+                on_notify_timeout,
                 (timeout - constants.notify_delta) * 60,
                 context={
                     "chat_id": chat_id,
                     "user_id": user_id,
                     "job_queue": context.job_queue,
+                    "creation_time": datetime.now().timestamp(),
                 },
             )
 
         job = context.job_queue.run_once(
-            _on_kick_timeout,
+            on_kick_timeout,
             timeout * 60,
             context={
                 "chat_id": chat_id,
                 "user_id": user_id,
                 "message_id": msg.message_id,
+                "creation_time": datetime.now().timestamp(),
             },
         )
 
@@ -122,7 +124,7 @@ def on_hashtag_message(update: Update, context: CallbackContext):
             update.message.reply_text(message_markdown, parse_mode=ParseMode.MARKDOWN)
 
 
-def _on_notify_timeout(context: CallbackContext):
+def on_notify_timeout(context: CallbackContext):
     bot, job = context.bot, context.job
     with session_scope() as sess:
         chat = sess.query(Chat).filter(Chat.id == job.context["chat_id"]).first()
@@ -146,7 +148,7 @@ def _on_notify_timeout(context: CallbackContext):
         )
 
 
-def _on_kick_timeout(context: CallbackContext):
+def on_kick_timeout(context: CallbackContext):
     bot, job = context.bot, context.job
     try:
         bot.delete_message(job.context["chat_id"], job.context["message_id"])

@@ -1,11 +1,15 @@
 import json
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
 from telegram.ext import CallbackContext
+from datetime import datetime, timedelta
 
 from src import constants
 from src.model import Chat, User, session_scope
 
+from src.handlers.group.group_handler import on_kick_timeout, on_notify_timeout
+
 from .utils import authorize_user
+
 
 # todo rework into callback folder
 def button_handler(update: Update, context: CallbackContext):
@@ -17,7 +21,10 @@ def button_handler(update: Update, context: CallbackContext):
             user_id = query.from_user.id
             users = sess.query(User).filter(User.user_id == user_id)
             user_chats = [
-                {"title": context.bot.get_chat(x.chat_id).title or x.chat_id, "id": x.chat_id}
+                {
+                    "title": context.bot.get_chat(x.chat_id).title or x.chat_id,
+                    "id": x.chat_id,
+                }
                 for x in users
             ]
 
@@ -207,11 +214,33 @@ def message_handler(update: Update, context: CallbackContext):
             except:
                 update.message.reply_text(constants.on_failed_set_kick_timeout_response)
                 return
-
             with session_scope() as sess:
                 chat = Chat(id=chat_id, kick_timeout=timeout)
                 sess.merge(chat)
             context.user_data["action"] = None
+
+            for job in context.job_queue.jobs():
+                if job.name in [on_kick_timeout.__name__, on_notify_timeout.__name__]:
+                    job_context = job.context
+                    job_creation_time = datetime.fromtimestamp(
+                        job_context.get("creation_time")
+                    )
+                    new_timeout = job_creation_time + timedelta(seconds=timeout * 60)
+                    if job.name == on_kick_timeout.__name__:
+                        if new_timeout < datetime.now():
+                            new_timeout = 0
+                        next_job_func = on_kick_timeout
+                    else:
+                        new_timeout = new_timeout - timedelta(
+                            seconds=constants.notify_delta * 60
+                        )
+                        next_job_func = on_notify_timeout
+
+                    job.schedule_removal()
+                    job_context["timeout"] = new_timeout
+                    job = context.job_queue.run_once(
+                        next_job_func, new_timeout, context=job_context
+                    )
 
             keyboard = [
                 [
