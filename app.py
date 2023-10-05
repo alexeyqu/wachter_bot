@@ -4,6 +4,7 @@ from telegram.ext import (
     Filters,
     MessageHandler,
     CallbackQueryHandler,
+    ChatMemberHandler,
 )
 from src.custom_filters import filter_bot_added
 from src.logging import tg_logger
@@ -18,6 +19,12 @@ def main():
     dp.add_handler(CommandHandler("help", handlers.help_handler))
 
     # group UX
+    dp.add_handler(
+        ChatMemberHandler(
+            handlers.on_make_admin_handler,
+            ChatMemberHandler.MY_CHAT_MEMBER,
+        )
+    )
     dp.add_handler(
         MessageHandler(
             Filters.entity("hashtag"),
