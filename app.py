@@ -21,7 +21,7 @@ def main():
     # group UX
     dp.add_handler(
         ChatMemberHandler(
-            handlers.on_make_admin_handler,
+            handlers.my_chat_member_handler,
             ChatMemberHandler.MY_CHAT_MEMBER,
         )
     )
