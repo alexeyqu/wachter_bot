@@ -18,15 +18,16 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
         return
 
     if old_status != ChatMember.ADMINISTRATOR and new_status == ChatMember.ADMINISTRATOR:
-        # TODO: add chat to DB so that it is visible via /start
-        # with session_scope() as sess:
-        #     chat = sess.query(Chat).filter(Chat.id == update.effective_chat.id).first()
+        # which means the bot is not admin and can be used
+        with session_scope() as sess:
+            chat = sess.query(Chat).filter(Chat.id == update.effective_chat.id).first()
 
-        #     if chat is None:
-        #         chat = Chat(id=update.effective_chat.id)
-        #         sess.add(chat)
-        #         sess.commit()
+            if chat is None:
+                chat = Chat(id=update.effective_chat.id)
+                sess.add(chat)
+                sess.commit()
+                # notify the admin about a new chat
+                context.bot.send_message(update.effective_user.id, constants.on_make_admin_direct_message.format(chat_name=update.effective_chat.title))
 
         context.bot.send_message(update.effective_chat.id, constants.on_make_admin_message)
-        # context.bot.send_message(update.effective_user.id, constants.on_make_admin_direct_message.format(chat_name=update.effective_chat.title))
         return
