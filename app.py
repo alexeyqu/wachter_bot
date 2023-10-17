@@ -36,7 +36,7 @@ def main():
     dp.add_handler(
         MessageHandler(
             Filters.status_update.new_chat_members & filter_bot_added,
-            handlers.on_new_chat_member,
+            handlers.on_new_chat_members,
             pass_job_queue=True,
         )
     )

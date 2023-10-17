@@ -11,68 +11,69 @@ from src.model import Chat, User, session_scope
 logger = logging.getLogger(__name__)
 
 
-def on_new_chat_member(update: Update, context: CallbackContext):
+def on_new_chat_members(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
-    user_id = update.message.new_chat_members[-1].id
+    user_ids = [new_chat_member.id for new_chat_member in update.message.new_chat_members]
 
-    for job in context.job_queue.jobs():
-        if (
-            job.context["user_id"] == user_id
-            and job.context["chat_id"] == chat_id
-            and job.enabled == True
-        ):
-            job.enabled = False
-            job.schedule_removal()
+    for user_id in user_ids:
+        for job in context.job_queue.jobs():
+            if (
+                job.context["user_id"] == user_id
+                and job.context["chat_id"] == chat_id
+                and job.enabled == True
+            ):
+                job.enabled = False
+                job.schedule_removal()
 
-    with session_scope() as sess:
-        user = (
-            sess.query(User)
-            .filter(User.chat_id == chat_id, User.user_id == user_id)
-            .first()
-        )
-        chat = sess.query(Chat).filter(Chat.id == chat_id).first()
+        with session_scope() as sess:
+            user = (
+                sess.query(User)
+                .filter(User.chat_id == chat_id, User.user_id == user_id)
+                .first()
+            )
+            chat = sess.query(Chat).filter(Chat.id == chat_id).first()
 
-        if chat is None:
-            chat = Chat(id=chat_id)
-            sess.add(chat)
-            sess.commit()
+            if chat is None:
+                chat = Chat(id=chat_id)
+                sess.add(chat)
+                sess.commit()
 
-        if user is not None:
-            update.message.reply_text(chat.on_known_new_chat_member_message)
-            return
+            if user is not None:
+                update.message.reply_text(chat.on_known_new_chat_member_message)
+                continue
 
-        message = chat.on_new_chat_member_message
-        timeout = chat.kick_timeout
+            message = chat.on_new_chat_member_message
+            timeout = chat.kick_timeout
 
-    if message == constants.skip_on_new_chat_member_message:
-        return
+        if message == constants.skip_on_new_chat_member_message:
+            continue
 
-    message_markdown = _mention_markdown(context.bot, chat_id, user_id, message)
-    msg = update.message.reply_text(message_markdown, parse_mode=ParseMode.MARKDOWN)
+        message_markdown = _mention_markdown(context.bot, chat_id, user_id, message)
+        msg = update.message.reply_text(message_markdown, parse_mode=ParseMode.MARKDOWN)
 
-    if timeout != 0:
-        if timeout >= 10:
+        if timeout != 0:
+            if timeout >= 10:
+                job = context.job_queue.run_once(
+                    on_notify_timeout,
+                    (timeout - constants.notify_delta) * 60,
+                    context={
+                        "chat_id": chat_id,
+                        "user_id": user_id,
+                        "job_queue": context.job_queue,
+                        "creation_time": datetime.now().timestamp(),
+                    },
+                )
+
             job = context.job_queue.run_once(
-                on_notify_timeout,
-                (timeout - constants.notify_delta) * 60,
+                on_kick_timeout,
+                timeout * 60,
                 context={
                     "chat_id": chat_id,
                     "user_id": user_id,
-                    "job_queue": context.job_queue,
+                    "message_id": msg.message_id,
                     "creation_time": datetime.now().timestamp(),
                 },
             )
-
-        job = context.job_queue.run_once(
-            on_kick_timeout,
-            timeout * 60,
-            context={
-                "chat_id": chat_id,
-                "user_id": user_id,
-                "message_id": msg.message_id,
-                "creation_time": datetime.now().timestamp(),
-            },
-        )
 
 
 def on_hashtag_message(update: Update, context: CallbackContext):
