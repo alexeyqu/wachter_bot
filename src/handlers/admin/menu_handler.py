@@ -1,7 +1,7 @@
 import json
-from typing import Union, Iterator
+from typing import Union, Iterator, Dict
 
-from telegram import InlineKeyboardMarkup, ParseMode, Update
+from telegram import InlineKeyboardMarkup, ParseMode, Update, Bot
 from telegram.ext import CallbackContext
 from datetime import datetime, timedelta
 
@@ -9,7 +9,7 @@ from src import constants
 from src.model import Chat, User, session_scope
 
 from src.handlers.group.group_handler import on_kick_timeout, on_notify_timeout
-from src.utils.actions_map import Button
+from src.utils.button import Button
 
 from .utils import authorize_user, new_button, create_keyboard, admin
 
@@ -34,7 +34,7 @@ def _get_chats(
             pass
 
 
-@admin
+# @admin
 def handle_chats_list(update: Update, context: CallbackContext):
     user_id = update.message.chat_id
     with session_scope() as sess:
@@ -48,7 +48,7 @@ def handle_chats_list(update: Update, context: CallbackContext):
     for chat in user_chats:
         buttons.append(new_button(Button.SELECT_CHAT, chat.get("id")))
     keyboard = create_keyboard(buttons)
-    update.message.reply_text(reply_markup=keyboard)
+    update.message.reply_text(constants.on_start_command, reply_markup=keyboard)
 
 
 def update_reply_markup(context, keyboard, query):

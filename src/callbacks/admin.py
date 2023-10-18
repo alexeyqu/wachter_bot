@@ -1,9 +1,9 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from src.utils.actions_map import Button, actions_map
+from src.utils.button import Button
 
-
+"""
 def button_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     action = query.data.get("action")
@@ -27,3 +27,4 @@ def message_callback(update: Update, context: CallbackContext):
     else:
         # Handle the case where the action is not recognized
         update.message.reply_text("Unrecognized action")
+"""

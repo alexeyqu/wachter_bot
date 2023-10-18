@@ -8,7 +8,7 @@ from telegram.ext import (
 from src.custom_filters import filter_bot_added
 from src.logging import tg_logger
 from src import handlers
-from src.callbacks.admin import button_callback, message_callback
+from src.callbacks import callback_map, actions_map
 import os
 
 
@@ -36,16 +36,21 @@ def main():
     )
 
     # admin UX
-    dp.add_handler(CommandHandler("start", handlers.start_handler, pass_user_data=True))
-    dp.add_handler(CallbackQueryHandler(button_callback, pass_user_data=True))
     dp.add_handler(
-        MessageHandler(
-            (Filters.text | Filters.entity),
-            message_callback,
-            pass_user_data=True,
-            pass_job_queue=True,
-        )
+        CommandHandler("start", handlers.handle_chats_list, pass_user_data=True)
     )
+    # dp.add_handler(CallbackQueryHandler(button_callback, pass_user_data=True))
+    for button, handler in callback_map.items():
+        dp.add_handler(CallbackQueryHandler(handler, pattern=str(button.value)))
+    for button, handler in actions_map.items():
+        dp.add_handler(
+            MessageHandler(
+                (Filters.text | Filters.entity),
+                handler,
+                pass_user_data=True,
+                pass_job_queue=True,
+            )
+        )
     # dp.add_error_handler(handlers.error_handler)
 
     updater.start_polling()

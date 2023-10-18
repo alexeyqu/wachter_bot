@@ -3,9 +3,14 @@ from typing import List, Union
 from functools import wraps
 
 from src.model import Chat, session_scope
+from src.utils.button import Button
+
+# from src.callbacks import actions_map, callback_map
 
 from telegram import Bot, Update
 from telegram.ext import CallbackContext
+
+# actions_map = {**callback_map, **actions_map}
 
 
 def admin(func):
@@ -31,6 +36,9 @@ def set_chat_attribute(chat_id, attribute, value):
 
 
 def new_button(button: Button, chat_id):
+    from src.callbacks import actions_map, callback_map
+
+    actions_map = {**callback_map, **actions_map}
     return InlineKeyboardButton(
         button.value,
         callback_data={"chat_id": chat_id, "action": actions_map.get(button)},
