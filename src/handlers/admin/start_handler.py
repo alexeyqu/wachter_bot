@@ -5,7 +5,7 @@ from telegram.ext import CallbackContext
 from src import constants
 from src.model import User, session_scope
 
-from .utils import authorize_user
+from .utils import authorize_user, get_chats_list, create_chats_list_keyboard
 
 
 # todo @admin decorator to prevent / tweak behaviour when calling from group chats
@@ -24,20 +24,9 @@ def start_handler(update: Update, context: CallbackContext):
         update.message.reply_text("У вас нет доступных чатов.")
         return
 
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                chat["title"],
-                callback_data=json.dumps(
-                    {"chat_id": chat["id"], "action": constants.Actions.select_chat}
-                ),
-            )
-        ]
-        for chat in user_chats
-        if authorize_user(context.bot, chat["id"], user_id)
-    ]
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(
+        create_chats_list_keyboard(user_chats, context, user_id)
+    )
     update.message.reply_text(constants.on_start_command, reply_markup=reply_markup)
 
 

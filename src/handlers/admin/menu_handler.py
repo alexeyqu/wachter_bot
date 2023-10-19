@@ -8,7 +8,7 @@ from src.model import Chat, User, session_scope
 
 from src.handlers.group.group_handler import on_kick_timeout, on_notify_timeout
 
-from .utils import authorize_user
+from .utils import authorize_user, get_chats_list, create_chats_list_keyboard
 
 
 # todo rework into callback folder
@@ -17,35 +17,16 @@ def button_handler(update: Update, context: CallbackContext):
     data = json.loads(query.data)
 
     if data["action"] == constants.Actions.start_select_chat:
-        with session_scope() as sess:
-            user_id = query.from_user.id
-            users = sess.query(User).filter(User.user_id == user_id)
-            user_chats = [
-                {
-                    "title": context.bot.get_chat(x.chat_id).title or x.chat_id,
-                    "id": x.chat_id,
-                }
-                for x in users
-            ]
+        user_id = query.from_user.id
+        user_chats = get_chats_list(user_id, context)
 
         if len(user_chats) == 0:
             update.message.reply_text("У вас нет доступных чатов.")
             return
 
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    chat["title"],
-                    callback_data=json.dumps(
-                        {"chat_id": chat["id"], "action": constants.Actions.select_chat}
-                    ),
-                )
-            ]
-            for chat in user_chats
-            if authorize_user(context.bot, chat["id"], user_id)
-        ]
-
-        reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = InlineKeyboardMarkup(
+            create_chats_list_keyboard(user_chats, context, user_id)
+        )
         context.bot.edit_message_reply_markup(
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
