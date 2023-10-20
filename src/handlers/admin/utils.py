@@ -2,7 +2,7 @@ import json
 from telegram import Bot, InlineKeyboardButton
 from telegram.ext import CallbackContext
 
-from src.model import Chat, User, session_scope
+from src.model import User, session_scope
 from src import constants
 
 

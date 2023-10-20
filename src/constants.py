@@ -17,7 +17,9 @@ help_message = """Привет. Для начала работы добавь м
 on_add_bot_to_chat_message = "Привет, я Вахтёр. Я буду следить за тем, чтобы все люди в чате были представившимися. Дайте мне админские права, чтобы я мог это делать."
 on_make_admin_message = "Спасибо, теперь я могу видеть сообщения. Пожалуйста, представьтесь используя хэштег #whois"
 on_make_admin_direct_message = "Есть новый чат {chat_name}"
-on_introduce_message_update = "Если вы хотите обновить, то добавьте тег #update к сообщению"
+on_introduce_message_update = (
+    "Если вы хотите обновить, то добавьте тег #update к сообщению"
+)
 
 get_settings_message = """
 Таймаут кика: {kick_timeout}
@@ -49,6 +51,12 @@ class Actions(IntEnum):
     set_kick_timeout = auto()
     set_on_kick_message = auto()
     get_current_settings = auto()
+    set_intro_settings = auto()
+    set_kick_bans_settings = auto()
+    back_to_chats = auto()
+    set_notify_timeout = auto()
+    get_current_kick_settings = auto()
+    get_current_intro_settings = auto()
 
 
 RH_kick_messages = [
