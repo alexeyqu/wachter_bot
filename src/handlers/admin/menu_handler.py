@@ -8,7 +8,7 @@ from src.model import Chat, User, session_scope
 
 from src.handlers.group.group_handler import on_kick_timeout, on_notify_timeout
 
-from .utils import authorize_user, get_chats_list, create_chats_list_keyboard
+from .utils import get_chats_list, create_chats_list_keyboard
 
 
 # todo rework into callback folder
@@ -38,11 +38,55 @@ def button_handler(update: Update, context: CallbackContext):
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "Изменить таймаут кика",
+                    "Intro",
                     callback_data=json.dumps(
                         {
                             "chat_id": selected_chat_id,
-                            "action": constants.Actions.set_kick_timeout,
+                            "action": constants.Actions.set_intro_settings,
+                        }
+                    ),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "K I K",
+                    callback_data=json.dumps(
+                        {
+                            "chat_id": selected_chat_id,
+                            "action": constants.Actions.set_kick_bans_settings,
+                        }
+                    ),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "Back",
+                    callback_data=json.dumps(
+                        {
+                            "chat_id": selected_chat_id,
+                            "action": constants.Actions.back_to_chats,
+                        }
+                    ),
+                )
+            ],
+        ]
+
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        context.bot.edit_message_reply_markup(
+            reply_markup=reply_markup,
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+        )
+    elif data["action"] == constants.Actions.set_intro_settings:
+        selected_chat_id = data["chat_id"]
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "See current settings",
+                    callback_data=json.dumps(
+                        {
+                            "chat_id": selected_chat_id,
+                            "action": constants.Actions.set_on_known_new_chat_member_message_response,
                         }
                     ),
                 )
@@ -71,17 +115,6 @@ def button_handler(update: Update, context: CallbackContext):
             ],
             [
                 InlineKeyboardButton(
-                    "Изменить сообщение после успешного представления",
-                    callback_data=json.dumps(
-                        {
-                            "chat_id": selected_chat_id,
-                            "action": constants.Actions.set_on_successful_introducion_response,
-                        }
-                    ),
-                )
-            ],
-            [
-                InlineKeyboardButton(
                     "Изменить сообщение напоминания",
                     callback_data=json.dumps(
                         {
@@ -93,7 +126,73 @@ def button_handler(update: Update, context: CallbackContext):
             ],
             [
                 InlineKeyboardButton(
-                    "Изменить сообщение после кика",
+                    "Set a warning time",
+                    callback_data=json.dumps(
+                        {
+                            "chat_id": selected_chat_id,
+                            "action": constants.Actions.set_notify_timeout,
+                        }
+                    ),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "Изменить сообщение после представления",
+                    callback_data=json.dumps(
+                        {
+                            "chat_id": selected_chat_id,
+                            "action": constants.Actions.set_on_successful_introducion_response,
+                        }
+                    ),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "Back",
+                    callback_data=json.dumps(
+                        {
+                            "chat_id": selected_chat_id,
+                            "action": constants.Actions.select_chat,
+                        }
+                    ),
+                )
+            ],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        context.bot.edit_message_reply_markup(
+            reply_markup=reply_markup,
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+        )
+
+    elif data["action"] == constants.Actions.set_kick_bans_settings:
+        selected_chat_id = data["chat_id"]
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "See current settings",
+                    callback_data=json.dumps(
+                        {
+                            "chat_id": selected_chat_id,
+                            "action": constants.Actions.get_current_kick_settings,
+                        }
+                    ),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "Изменить время до удаления",
+                    callback_data=json.dumps(
+                        {
+                            "chat_id": selected_chat_id,
+                            "action": constants.Actions.set_kick_timeout,
+                        }
+                    ),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "Изменить сообщение после удаления",
                     callback_data=json.dumps(
                         {
                             "chat_id": selected_chat_id,
@@ -104,18 +203,29 @@ def button_handler(update: Update, context: CallbackContext):
             ],
             [
                 InlineKeyboardButton(
-                    "Получить текущие настройки",
+                    "Back",
                     callback_data=json.dumps(
                         {
                             "chat_id": selected_chat_id,
-                            "action": constants.Actions.get_current_settings,
+                            "action": constants.Actions.select_chat,
                         }
                     ),
                 )
             ],
         ]
-
         reply_markup = InlineKeyboardMarkup(keyboard)
+        context.bot.edit_message_reply_markup(
+            reply_markup=reply_markup,
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+        )
+
+    elif data["action"] == constants.Actions.back_to_chats:
+        user_id = query.message.chat_id
+        user_chats = list(get_chats_list(user_id, context))
+        reply_markup = InlineKeyboardMarkup(
+            create_chats_list_keyboard(user_chats, context, user_id)
+        )
         context.bot.edit_message_reply_markup(
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
