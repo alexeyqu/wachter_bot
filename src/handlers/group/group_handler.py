@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 
 def on_new_chat_members(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
-    user_ids = [new_chat_member.id for new_chat_member in update.message.new_chat_members]
+    user_ids = [
+        new_chat_member.id for new_chat_member in update.message.new_chat_members
+    ]
 
     for user_id in user_ids:
         for job in context.job_queue.jobs():
@@ -43,7 +45,8 @@ def on_new_chat_members(update: Update, context: CallbackContext):
                 continue
 
             message = chat.on_new_chat_member_message
-            timeout = chat.kick_timeout
+            kick_timeout = chat.kick_timeout
+            notify_timeout = chat.notify_timeout
 
         if message == constants.skip_on_new_chat_member_message:
             continue
@@ -51,26 +54,26 @@ def on_new_chat_members(update: Update, context: CallbackContext):
         message_markdown = _mention_markdown(context.bot, chat_id, user_id, message)
         msg = update.message.reply_text(message_markdown, parse_mode=ParseMode.MARKDOWN)
 
-        if timeout != 0:
-            if timeout >= 10:
-                job = context.job_queue.run_once(
-                    on_notify_timeout,
-                    (timeout - constants.notify_delta) * 60,
-                    context={
-                        "chat_id": chat_id,
-                        "user_id": user_id,
-                        "job_queue": context.job_queue,
-                        "creation_time": datetime.now().timestamp(),
-                    },
-                )
-
+        if kick_timeout != 0:
             job = context.job_queue.run_once(
                 on_kick_timeout,
-                timeout * 60,
+                kick_timeout * 60,
                 context={
                     "chat_id": chat_id,
                     "user_id": user_id,
                     "message_id": msg.message_id,
+                    "creation_time": datetime.now().timestamp(),
+                },
+            )
+
+        if notify_timeout != 0:
+            job = context.job_queue.run_once(
+                on_notify_timeout,
+                notify_timeout * 60,
+                context={
+                    "chat_id": chat_id,
+                    "user_id": user_id,
+                    "job_queue": context.job_queue,
                     "creation_time": datetime.now().timestamp(),
                 },
             )
@@ -100,9 +103,19 @@ def on_hashtag_message(update: Update, context: CallbackContext):
             message = chat.on_introduce_message
 
         with session_scope() as sess:
-            existing_user = sess.query(User).filter(User.chat_id == chat_id, User.user_id == user_id).first()
-            if existing_user and "#update" not in update.message.parse_entities(types=["hashtag"]).values():
-                update.message.reply_text(constants.on_introduce_message_update, parse_mode=ParseMode.MARKDOWN)
+            existing_user = (
+                sess.query(User)
+                .filter(User.chat_id == chat_id, User.user_id == user_id)
+                .first()
+            )
+            if (
+                existing_user
+                and "#update"
+                not in update.message.parse_entities(types=["hashtag"]).values()
+            ):
+                update.message.reply_text(
+                    constants.on_introduce_message_update, parse_mode=ParseMode.MARKDOWN
+                )
                 return
 
             user = User(chat_id=chat_id, user_id=user_id, whois=update.message.text)

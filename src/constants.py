@@ -2,11 +2,12 @@ from enum import IntEnum, auto
 
 # MESSAGES
 on_set_new_message = "Обновил сообщение."
-on_success_set_kick_timeout_response = "Обновил таймаут кика."
-on_failed_set_kick_timeout_response = "Таймаут должен быть целым положительным числом"
+on_success_set_kick_timeout_response = "Обновил время до удаления."
+on_sucess_set_notify_timeout_response = "Обновил время до напоминания."
+on_failed_set_kick_timeout_response = "Время должно быть целым положительным числом."
 on_failed_kick_response = "Я не справился."
 on_success_kick_response = "%USER\_MENTION% не представился и был кикнут из чата."
-on_start_command = "Выберите чат и действие:"
+on_start_command = "Выберите чат:"
 skip_on_new_chat_member_message = "%SKIP%"
 help_message = """Привет. Для начала работы добавь меня в чат.
 Для настройки бота админу нужно представиться в чате (написать сообщение с #whois длинной больше 120 символов) и написать мне в личных сообщениях /start.
@@ -21,8 +22,7 @@ on_introduce_message_update = (
     "Если вы хотите обновить, то добавьте тег #update к сообщению"
 )
 
-get_settings_message = """
-Таймаут кика: {kick_timeout}
+get_intro_settings_message = """
 ---
 Сообщение для нового участника чата: {on_new_chat_member_message}
 ---
@@ -30,9 +30,18 @@ get_settings_message = """
 ---
 Сообщение после успешного представления: {on_introduce_message}
 ---
-Сообщение предупреждения: {notify_message}
+Сообщение напоминания: {notify_message}
 ---
-Сообщение после кика: {on_kick_message}
+Длина #whois: {whois_length}
+---
+Время до напоминания в минутах (целое положительное число): {notify_timeout}
+"""
+
+get_kick_settings_message = """
+---
+Время до удаления в минутах (целое положительное число): {kick_timeout}
+---
+Сообщение после удаления: {on_kick_message}
 """
 
 default_kick_timeout = 0
@@ -57,6 +66,8 @@ class Actions(IntEnum):
     set_notify_timeout = auto()
     get_current_kick_settings = auto()
     get_current_intro_settings = auto()
+    set_whois_length = auto()
+    set_on_introduce_message_update = auto()
 
 
 RH_kick_messages = [
