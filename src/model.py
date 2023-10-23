@@ -31,8 +31,17 @@ class Chat(Base):
         default="%USER\_MENTION%, пожалуйста, представьтесь и поздоровайтесь с сообществом.",
     )
     regex_filter = Column(Text, nullable=True)  # keeping that in db for now, unused
-    filter_only_new_users = Column(Boolean, nullable=False, default=False)  # keeping that in db for now, unused
+    filter_only_new_users = Column(
+        Boolean, nullable=False, default=False
+    )  # keeping that in db for now, unused
     kick_timeout = Column(Integer, nullable=False, default=0)
+    notify_timeout = Column(Integer, nullable=False, default=0)
+    whois_length = Column(Integer, nullable=False, default=60)
+    on_introduce_message_update = Column(
+        Text,
+        nullable=False,
+        default="Если вы хотите обновить, то добавьте тег #update к сообщению.",
+    )
 
     def __repr__(self):
         return f"<Chat(id={self.id})>"
