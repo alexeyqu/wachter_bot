@@ -17,7 +17,7 @@ def authorize_user(bot: Bot, chat_id: int, user_id: int):
 def get_chats_list(user_id, context: CallbackContext):
     with session_scope() as sess:
         users = sess.query(User).filter(User.user_id == user_id)
-        return _get_chats_helper(users, user_id, context.bot)
+    return _get_chats_helper(users, user_id, context.bot)
 
 
 def _get_chats_helper(users: list, user_id: int, bot: Bot):

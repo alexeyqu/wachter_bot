@@ -29,7 +29,6 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
                 # TODO after v1.0: rework the DB schema
                 user = User(chat_id=update.effective_chat.id, user_id=update.effective_user.id, whois='')
                 sess.merge(user)
-                sess.commit()
                 # notify the admin about a new chat
                 context.bot.send_message(update.effective_user.id, constants.on_make_admin_direct_message.format(chat_name=update.effective_chat.title))
 
