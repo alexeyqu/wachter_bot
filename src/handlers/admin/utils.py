@@ -12,7 +12,6 @@ def authorize_user(bot: Bot, chat_id: int, user_id: int):
         status = bot.get_chat_member(chat_id, user_id).status
         return status in ["creator", "administrator"]
     except Exception as e:
-        tg_logger.exception(e)
         return False
 
 
