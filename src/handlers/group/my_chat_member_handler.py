@@ -1,12 +1,8 @@
-import logging
 from telegram import ChatMember, Update
 from telegram.ext import CallbackContext
 
 from src import constants
 from src.model import Chat, User, session_scope
-
-
-logger = logging.getLogger(__name__)
 
 
 def my_chat_member_handler(update: Update, context: CallbackContext):

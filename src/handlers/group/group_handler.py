@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import logging
 import random
 from telegram import Bot, Message, ParseMode, Update
 from telegram.ext import CallbackContext
