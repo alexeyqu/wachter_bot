@@ -4,11 +4,9 @@ import random
 from telegram import Bot, Message, ParseMode, Update
 from telegram.ext import CallbackContext
 
+from src.logging import tg_logger
 from src import constants
 from src.model import Chat, User, session_scope
-
-
-logger = logging.getLogger(__name__)
 
 
 def on_new_chat_members(update: Update, context: CallbackContext):
@@ -132,8 +130,11 @@ def on_hashtag_message(update: Update, context: CallbackContext):
                     context.bot.delete_message(
                         job.context["chat_id"], job.context["message_id"]
                     )
-                except:
-                    pass
+                except Exception as e:
+                    tg_logger.warning(
+                        f"can't delete {job.context['message_id']} from {job.context['chat_id']}",
+                        exc_info=e,
+                    )
                 job.enabled = False
                 job.schedule_removal()
                 removed = True
@@ -171,8 +172,11 @@ def on_kick_timeout(context: CallbackContext):
     bot, job = context.bot, context.job
     try:
         bot.delete_message(job.context["chat_id"], job.context["message_id"])
-    except:
-        pass
+    except Exception as e:
+        tg_logger.warning(
+            f"can't delete {job.context['message_id']} from {job.context['chat_id']}",
+            exc_info=e,
+        )
 
     try:
         bot.kick_chat_member(
@@ -204,7 +208,7 @@ def on_kick_timeout(context: CallbackContext):
                     parse_mode=ParseMode.MARKDOWN,
                 )
     except Exception as e:
-        logger.error(e)
+        tg_logger.exception(e)
         bot.send_message(job.context["chat_id"], text=constants.on_failed_kick_response)
 
 
@@ -212,8 +216,11 @@ def _delete_message(context: CallbackContext):
     bot, job = context.bot, context.job
     try:
         bot.delete_message(job.context["chat_id"], job.context["message_id"])
-    except:
-        print(f"can't delete {job.context['message_id']} from {job.context['chat_id']}")
+    except Exception as e:
+        tg_logger.warning(
+            f"can't delete {job.context['message_id']} from {job.context['chat_id']}",
+            exc_info=e,
+        )
 
 
 def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: Message):

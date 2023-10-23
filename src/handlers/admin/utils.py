@@ -2,6 +2,7 @@ import json
 from telegram import Bot, InlineKeyboardButton
 from telegram.ext import CallbackContext
 
+from src.logging import tg_logger
 from src.model import User, session_scope
 from src import constants
 
@@ -10,13 +11,18 @@ def authorize_user(bot: Bot, chat_id: int, user_id: int):
     try:
         status = bot.get_chat_member(chat_id, user_id).status
         return status in ["creator", "administrator"]
-    except Exception:
+    except Exception as e:
+        tg_logger.exception(e)
         return False
 
 
 def get_chats_list(user_id, context: CallbackContext):
     with session_scope() as sess:
         users = sess.query(User).filter(User.user_id == user_id).all()
+        # need that to terminate the session before running the expensive _get_chats_helper
+        # AND be able to use the `users` list
+        for user in users:
+            sess.expunge(user)
     return _get_chats_helper(users, user_id, context.bot)
 
 
@@ -28,8 +34,8 @@ def _get_chats_helper(users: list, user_id: int, bot: Bot):
                     "title": bot.get_chat(x.chat_id).title or x.chat_id,
                     "id": x.chat_id,
                 }
-        except Exception:
-            pass
+        except Exception as e:
+            tg_logger.exception(e)
 
 
 def create_chats_list_keyboard(user_chats, context: CallbackContext, user_id):
