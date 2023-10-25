@@ -8,7 +8,17 @@ from src import constants
 from src.model import Chat, User, session_scope
 
 
-def on_new_chat_members(update: Update, context: CallbackContext):
+def on_new_chat_members(update: Update, context: CallbackContext) -> None:
+    """
+    Handle the event when a new member joins a chat.
+
+    Args:
+    update (Update): The update object that represents the incoming update.
+    context (CallbackContext): The context object that contains information about the current state of the bot.
+
+    Returns:
+    None
+    """
     chat_id = update.message.chat_id
     user_ids = [
         new_chat_member.id for new_chat_member in update.message.new_chat_members
@@ -76,7 +86,18 @@ def on_new_chat_members(update: Update, context: CallbackContext):
             )
 
 
-def on_hashtag_message(update: Update, context: CallbackContext):
+def on_hashtag_message(update: Update, context: CallbackContext) -> None:
+    """
+    Handle messages containing #whois hashtag.
+
+    Args:
+    update (Update): The update object that represents the incoming update.
+    context (CallbackContext): The context object that contains information about the current state of the bot.
+
+    Returns:
+    None
+    """
+    # If the message was edited, update the message in the update object
     if not update.message:
         update.message = update.edited_message
 
@@ -144,6 +165,15 @@ def on_hashtag_message(update: Update, context: CallbackContext):
 
 
 def on_notify_timeout(context: CallbackContext):
+    """
+    Send notify message, schedule its deletion.
+
+    Args:
+    context (CallbackContext): The context object containing the job details and bot instance.
+
+    Returns:
+    None
+    """
     bot, job = context.bot, context.job
     with session_scope() as sess:
         chat = sess.query(Chat).filter(Chat.id == job.context["chat_id"]).first()
@@ -167,7 +197,16 @@ def on_notify_timeout(context: CallbackContext):
         )
 
 
-def on_kick_timeout(context: CallbackContext):
+def on_kick_timeout(context: CallbackContext) -> None:
+    """
+    Kick a user from the chat after a set amount of time and send a message about it.
+
+    Args:
+    context (CallbackContext): The context object containing the job details and bot instance.
+
+    Returns:
+    None
+    """
     bot, job = context.bot, context.job
     try:
         bot.delete_message(job.context["chat_id"], job.context["message_id"])
@@ -211,7 +250,16 @@ def on_kick_timeout(context: CallbackContext):
         bot.send_message(job.context["chat_id"], text=constants.on_failed_kick_response)
 
 
-def _delete_message(context: CallbackContext):
+def _delete_message(context: CallbackContext) -> None:
+    """
+    Delete a message from a chat.
+
+    Args:
+    context (CallbackContext): The context object containing the job details and bot instance.
+
+    Returns:
+    None
+    """
     bot, job = context.bot, context.job
     try:
         bot.delete_message(job.context["chat_id"], job.context["message_id"])
@@ -222,7 +270,19 @@ def _delete_message(context: CallbackContext):
         )
 
 
-def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: Message):
+def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: Message) -> str:
+    """
+    Format a message to include a markdown mention of a user.
+
+    Args:
+    bot (Bot): The Telegram bot instance.
+    chat_id (int): The ID of the chat.
+    user_id (int): The ID of the user to mention.
+    message (Message): The message to format.
+
+    Returns:
+    str: The formatted message with the user mention.
+    """
     user = bot.get_chat_member(chat_id, user_id).user
     if not user.name:
         # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)

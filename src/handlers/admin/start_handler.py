@@ -1,26 +1,38 @@
-from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram import InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext
 
 from src import constants
 
-from .utils import get_chats_list, create_chats_list_keyboard
+from .utils import get_chats_list, create_chats_list_keyboard, admin
 
 
-# todo @admin decorator to prevent / tweak behaviour when calling from group chats
-# this will be a nice replacement for "if user_id < 0" checks
-def start_handler(update: Update, context: CallbackContext):
+@admin
+def start_handler(update: Update, context: CallbackContext) -> None:
+    """
+    Handle the /start command in a Telegram chat.
+
+    Args:
+    update (Update): The update object that represents the incoming update.
+    context (CallbackContext): The context object that contains information about the current state of the bot.
+
+    Returns:
+    None
+    """
+    # Get the ID of the user who sent the message
     user_id = update.message.chat_id
 
-    if user_id < 0:
-        return
-
+    # Retrieve the list of chats where the user has administrative privileges
     user_chats = list(get_chats_list(user_id, context))
 
+    # If the user does not have administrative privileges in any chat, inform them
     if len(user_chats) == 0:
         update.message.reply_text("У вас нет доступных чатов.")
         return
 
+    # Create an inline keyboard with the list of available chats
     reply_markup = InlineKeyboardMarkup(
         create_chats_list_keyboard(user_chats, context, user_id)
     )
+
+    # Send a message to the user with the inline keyboard
     update.message.reply_text(constants.on_start_command, reply_markup=reply_markup)
