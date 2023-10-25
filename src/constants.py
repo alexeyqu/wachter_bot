@@ -23,6 +23,15 @@ on_make_admin_direct_message = "Есть новый чат {chat_name}"
 on_introduce_message_update = (
     "Если вы хотите обновить, то добавьте тег #update к сообщению"
 )
+on_new_chat_member_message = "Добро пожаловать! Пожалуйста, представьтесь с использованием хэштега #whois и поздоровайтесь с сообществом."
+on_known_new_chat_member_message = "Добро пожаловать снова!"
+on_introduce_message = "Спасибо и добро пожаловать!"
+on_kick_message = "%USER_MENTION% не представился и покидает чат."
+notify_message = (
+    "%USER_MENTION%, пожалуйста, представьтесь с использованием хэштега #whois."
+)
+on_introduce_message_update = "%USER_MENTION%, если вы хотите обновить существующий #whois, пожалуйста добавьте тег #update к сообщению."
+
 
 get_intro_settings_message = """
 ---
