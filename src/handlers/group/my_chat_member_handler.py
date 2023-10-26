@@ -25,6 +25,16 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
 
             if chat is None:
                 chat = Chat(id=update.effective_chat.id)
+                # write default
+                chat.on_new_chat_member_message = constants.on_new_chat_member_message
+                chat.on_known_new_chat_member_message = (
+                    constants.on_known_new_chat_member_message
+                )
+                chat.on_introduce_message = constants.on_introduce_message
+                chat.on_kick_message = constants.on_kick_message
+                chat.notify_message = constants.notify_message
+                chat.on_introduce_message_update = constants.on_introduce_message_update
+
                 sess.add(chat)
                 # hack with adding an empty #whois to prevent slow /start cmd
                 # TODO after v1.0: rework the DB schema
