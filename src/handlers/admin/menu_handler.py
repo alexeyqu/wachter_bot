@@ -267,6 +267,15 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         context.user_data["chat_id"] = data["chat_id"]
         context.user_data["action"] = data["action"]
 
+    elif data["action"] == constants.Actions.set_on_known_new_chat_member_message_response:
+        context.bot.edit_message_text(
+            text="Отправьте новый текст сообщения при перезаходе в чат",
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+        )
+        context.user_data["chat_id"] = data["chat_id"]
+        context.user_data["action"] = data["action"]
+
     elif data["action"] == constants.Actions.set_notify_message:
         context.bot.edit_message_text(
             text="Отправьте новый текст сообщения напоминания",
@@ -288,6 +297,15 @@ def button_handler(update: Update, context: CallbackContext) -> None:
     elif data["action"] == constants.Actions.set_on_successful_introducion_response:
         context.bot.edit_message_text(
             text="Отправьте новый текст сообщения после представления",
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+        )
+        context.user_data["chat_id"] = data["chat_id"]
+        context.user_data["action"] = data["action"]
+
+    elif data["action"] == constants.Actions.set_whois_length:
+        context.bot.edit_message_text(
+            text="Отправьте новую необходимую длину #whois (количество символов)",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
         )
@@ -465,7 +483,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                     chat = Chat(id=chat_id, on_introduce_message_update=message)
                 sess.merge(chat)
 
-            if action == constants.Actions.set_on_kick_message:
+            if action in [constants.Actions.set_on_kick_message, constants.Actions.set_kick_timeout]:
                 keyboard = [
                     [
                         new_button(
