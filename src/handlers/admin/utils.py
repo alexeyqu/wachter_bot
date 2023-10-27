@@ -10,7 +10,7 @@ from src.model import User, session_scope
 from src import constants
 
 
-def new_button(text: str, chat_id: int, action: str) -> InlineKeyboardButton:
+def new_button(text: str, chat_id: int, action: str, chat_name: str=None) -> InlineKeyboardButton:
     """
     Create a new InlineKeyboardButton with associated callback data.
 
@@ -22,7 +22,7 @@ def new_button(text: str, chat_id: int, action: str) -> InlineKeyboardButton:
     Returns:
     InlineKeyboardButton: The created InlineKeyboardButton instance.
     """
-    callback_data = json.dumps({"chat_id": chat_id, "action": action})
+    callback_data = json.dumps({"chat_id": chat_id, "chat_name": chat_name, "action": action})
     return InlineKeyboardButton(text, callback_data=callback_data)
 
 
@@ -125,7 +125,7 @@ def create_chats_list_keyboard(
     List[List[InlineKeyboardButton]]: The created keyboard layout.
     """
     return [
-        [new_button(chat["title"], chat["id"], constants.Actions.select_chat)]
+        [new_button(chat["title"], chat["id"], constants.Actions.select_chat, chat["title"])]
         for chat in user_chats
         if authorize_user(context.bot, chat["id"], user_id)
     ]

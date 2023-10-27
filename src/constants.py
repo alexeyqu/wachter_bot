@@ -9,7 +9,7 @@ on_failed_set_whois_length_response = "Длина должна быть целы
 on_failed_kick_response = "Я не справился. Возможно, мне не хватает прав."
 on_success_notify_response = "Обновил время до напоминания."
 on_start_command = "Выберите чат:"
-on_select_chat_message = "Теперь выберите действие:"
+on_select_chat_message = "Выбран чат {chat_name}. Теперь выберите действие:"
 skip_on_new_chat_member_message = "%SKIP%"
 help_message = """Привет! Я — бот Вахтер. Я слежу, чтобы в твоем чате были только представившиеся пользователи. 
 Для начала работы добавь меня в чат и сделай меня администратором.
@@ -23,7 +23,7 @@ on_make_admin_direct_message = "Новый чат {chat_name}"
 on_new_chat_member_message = "Добро пожаловать! Пожалуйста, представьтесь с использованием хэштега #whois и поздоровайтесь с сообществом."
 on_known_new_chat_member_message = "Добро пожаловать снова!"
 on_introduce_message = "Спасибо и добро пожаловать!"
-on_kick_message = "%USER\_MENTION% не представился и покидает чат."
+on_kick_message = "%USER\_MENTION% молчит и покидает чат."
 notify_message = (
     "%USER\_MENTION%, пожалуйста, представьтесь с использованием хэштега #whois."
 )
@@ -32,6 +32,7 @@ on_short_whois_message = "%USER\_MENTION%, напишите про себя по
 
 
 get_intro_settings_message = """
+Выбран чат {chat_name}.
 ---
 Сообщение для нового участника чата: {on_new_chat_member_message}
 ---
@@ -49,6 +50,7 @@ get_intro_settings_message = """
 """
 
 get_kick_settings_message = """
+Выбран чат {chat_name}.
 ---
 Время до удаления в минутах (целое положительное число): {kick_timeout}
 ---
