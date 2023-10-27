@@ -329,7 +329,11 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.get_current_kick_settings:
         keyboard = [
-            [new_button("Назад", data["chat_id"], constants.Actions.set_intro_settings)]
+            [
+                new_button(
+                    "Назад", data["chat_id"], constants.Actions.set_kick_bans_settings
+                )
+            ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         context.bot.edit_message_text(
@@ -382,7 +386,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
             _job_rescheduling_helper(on_kick_timeout, timeout, context, chat_id)
 
             keyboard = [
-                [new_button("Назад", chat_id, constants.Actions.set_intro_settings)]
+                [new_button("Назад", chat_id, constants.Actions.set_kick_bans_settings)]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             update.message.reply_text(
