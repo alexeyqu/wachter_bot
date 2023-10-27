@@ -120,7 +120,8 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         reply_markup = InlineKeyboardMarkup(
             create_chats_list_keyboard(user_chats, context, user_id)
         )
-        context.bot.edit_message_reply_markup(
+        context.bot.edit_message_text(
+            constants.on_start_command,
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -139,7 +140,8 @@ def button_handler(update: Update, context: CallbackContext) -> None:
             [{"text": "Назад", "action": constants.Actions.back_to_chats}],
         ]
         reply_markup = new_keyboard_layout(button_configs, selected_chat_id)
-        context.bot.edit_message_reply_markup(
+        context.bot.edit_message_text(
+            constants.on_select_chat_message,
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -234,7 +236,8 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         reply_markup = InlineKeyboardMarkup(
             create_chats_list_keyboard(user_chats, context, user_id)
         )
-        context.bot.edit_message_reply_markup(
+        context.bot.edit_message_text(
+            constants.on_start_command,
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
