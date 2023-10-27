@@ -33,6 +33,9 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
                 chat.on_introduce_message = constants.on_introduce_message
                 chat.on_kick_message = constants.on_kick_message
                 chat.notify_message = constants.notify_message
+                chat.kick_timeout = constants.default_kick_timeout
+                chat.notify_timeout = constants.default_notify_timeout
+                chat.whois_length = constants.min_whois_length
                 chat.on_introduce_message_update = constants.on_introduce_message_update
 
                 sess.add(chat)
@@ -53,6 +56,7 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
                 )
 
         context.bot.send_message(
-            update.effective_chat.id, constants.on_make_admin_message
+            update.effective_chat.id,
+            constants.on_make_admin_message.format(whois_length=chat.whois_length),
         )
         return

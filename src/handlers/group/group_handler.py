@@ -105,7 +105,6 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
 
     if (
         "#whois" in update.message.parse_entities(types=["hashtag"]).values()
-        and len(update.message.text) >= constants.min_whois_length
         and chat_id < 0
     ):
         user_id = update.message.from_user.id
@@ -117,6 +116,21 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 chat = Chat(id=chat_id)
                 sess.add(chat)
                 sess.commit()
+
+            if len(update.message.text) <= chat.whois_length:
+                message_markdown = _mention_markdown(
+                    # TODO move to chat DB
+                    context.bot,
+                    chat_id,
+                    user_id,
+                    constants.on_short_whois_message.format(
+                        whois_length=chat.whois_length
+                    ),
+                )
+                update.message.reply_text(
+                    message_markdown, parse_mode=ParseMode.MARKDOWN
+                )
+                return
 
             message = chat.on_introduce_message
 
@@ -191,7 +205,7 @@ def on_notify_timeout(context: CallbackContext):
 
         job.context["job_queue"].run_once(
             _delete_message,
-            constants.notify_delta * 60,
+            (chat.kick_timeout - chat.notify_timeout) * 60,
             context={
                 "chat_id": job.context["chat_id"],
                 "user_id": job.context["user_id"],
