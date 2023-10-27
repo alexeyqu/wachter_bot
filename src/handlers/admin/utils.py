@@ -146,5 +146,6 @@ def admin(func):
     @wraps(func)
     def wrapper(update: Update, context: CallbackContext, *args, **kwargs):
         if update.message.chat_id < 0:
-            return  # Skip the ececution of the function in case of group chat
+            return  # Skip the execution of the function in case of group chat
         return func(update, context, *args, **kwargs)
+    return wrapper
