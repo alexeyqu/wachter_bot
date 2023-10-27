@@ -131,8 +131,11 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 and "#update"
                 not in update.message.parse_entities(types=["hashtag"]).values()
             ):
+                message_markdown = _mention_markdown(
+                    context.bot, chat_id, user_id, constants.on_introduce_message_update
+                )
                 update.message.reply_text(
-                    constants.on_introduce_message_update, parse_mode=ParseMode.MARKDOWN
+                    message_markdown, parse_mode=ParseMode.MARKDOWN
                 )
                 return
 

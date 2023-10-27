@@ -15,9 +15,11 @@ log_config = {
     "loggers": {
         "wachter_telegram_logger": {
             "level": "INFO",
-            "handlers": ["wachter_telegram",]
+            "handlers": [
+                "wachter_telegram",
+            ],
         }
-    }
+    },
 }
 
 config.dictConfig(log_config)
