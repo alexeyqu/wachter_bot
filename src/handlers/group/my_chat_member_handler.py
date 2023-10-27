@@ -35,7 +35,7 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
                 chat.notify_message = constants.notify_message
                 chat.kick_timeout = constants.default_kick_timeout
                 chat.notify_timeout = constants.default_notify_timeout
-                chat.whois_length = constants.min_whois_length
+                chat.whois_length = constants.default_whois_length
                 chat.on_introduce_message_update = constants.on_introduce_message_update
 
                 sess.add(chat)
