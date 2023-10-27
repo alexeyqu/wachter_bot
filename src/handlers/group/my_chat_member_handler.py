@@ -39,7 +39,7 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
                 chat.whois_length = constants.default_whois_length
                 chat.on_introduce_message_update = constants.on_introduce_message_update
 
-                sess.add(chat)
+                sess.merge(chat)
                 # hack with adding an empty #whois to prevent slow /start cmd
                 # TODO after v1.0: rework the DB schema
                 user = User(
