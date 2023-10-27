@@ -137,7 +137,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
                     "action": constants.Actions.set_kick_bans_settings,
                 }
             ],
-            [{"text": "Назад", "action": constants.Actions.back_to_chats}],
+            [{"text": "Назад к списку чатов", "action": constants.Actions.back_to_chats}],
         ]
         reply_markup = new_keyboard_layout(button_configs, selected_chat_id)
         context.bot.edit_message_text(
@@ -169,7 +169,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
             ],
             [
                 {
-                    "text": "Изменить сообщение при перезаходе в чат",
+                    "text": "Изменить сообщение напоминания",
                     "action": constants.Actions.set_notify_message,
                 }
             ],
@@ -183,6 +183,12 @@ def button_handler(update: Update, context: CallbackContext) -> None:
                 {
                     "text": "Изменить время напоминания",
                     "action": constants.Actions.set_notify_timeout,
+                }
+            ],
+            [
+                {
+                    "text": "Изменить необходимую длину #whois",
+                    "action": constants.Actions.set_whois_length,
                 }
             ],
             [
