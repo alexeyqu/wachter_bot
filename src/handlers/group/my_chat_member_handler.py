@@ -3,6 +3,7 @@ from telegram.ext import CallbackContext
 
 from src import constants
 from src.model import Chat, User, session_scope
+from src.handlers.admin.utils import new_keyboard_layout
 
 
 def my_chat_member_handler(update: Update, context: CallbackContext):
@@ -48,11 +49,30 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
                 )
                 sess.merge(user)
                 # notify the admin about a new chat
+                button_configs = [
+                    [
+                        {
+                            "text": "Приветствия",
+                            "action": constants.Actions.set_intro_settings,
+                        }
+                    ],
+                    [
+                        {
+                            "text": "Удаление и блокировка",
+                            "action": constants.Actions.set_kick_bans_settings,
+                        }
+                    ],
+                    [{"text": "Назад", "action": constants.Actions.back_to_chats}],
+                ]
+                reply_markup = new_keyboard_layout(
+                    button_configs, update.effective_chat.id
+                )
                 context.bot.send_message(
                     update.effective_user.id,
                     constants.on_make_admin_direct_message.format(
                         chat_name=update.effective_chat.title
                     ),
+                    reply_markup=reply_markup,
                 )
 
         context.bot.send_message(
