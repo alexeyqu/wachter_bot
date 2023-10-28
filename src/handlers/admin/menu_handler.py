@@ -346,7 +346,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_on_introduce_message_update:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения для обновления #whois",
+            text="Отправьте новый текст сообщения для обновления #whois (должно содержать хэштег #update)",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
         )
@@ -502,6 +502,14 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                         return
 
                 if action == constants.Actions.set_on_introduce_message_update:
+                    if (
+                        "#update"
+                        not in update.message.parse_entities(types=["hashtag"]).values()
+                    ):
+                        update.message.reply_text(
+                            constants.need_hashtag_update_response
+                        )
+                        return
                     chat = Chat(id=chat_id, on_introduce_message_update=message)
                 sess.merge(chat)
 
@@ -523,6 +531,4 @@ def message_handler(update: Update, context: CallbackContext) -> None:
             context.user_data["action"] = None
 
             reply_markup = InlineKeyboardMarkup(keyboard)
-            update.message.reply_text(
-                reply_message, reply_markup=reply_markup
-            )
+            update.message.reply_text(reply_message, reply_markup=reply_markup)

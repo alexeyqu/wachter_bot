@@ -27,7 +27,7 @@ def main():
     )
     dp.add_handler(
         MessageHandler(
-            Filters.entity("hashtag"),
+            Filters.entity("hashtag") & Filters.chat_type.groups,
             handlers.on_hashtag_message,
             pass_job_queue=True,
             pass_user_data=True,
@@ -42,9 +42,7 @@ def main():
     )
 
     # admin UX
-    dp.add_handler(
-        CommandHandler("start", handlers.start_handler, pass_user_data=True)
-    )
+    dp.add_handler(CommandHandler("start", handlers.start_handler, pass_user_data=True))
     dp.add_handler(CallbackQueryHandler(handlers.button_handler, pass_user_data=True))
     dp.add_handler(
         MessageHandler(
