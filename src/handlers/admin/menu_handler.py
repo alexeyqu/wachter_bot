@@ -14,6 +14,7 @@ from .utils import (
     create_chats_list_keyboard,
     new_button,
     new_keyboard_layout,
+    get_chat_name,
 )
 
 from src.logging import tg_logger
@@ -72,7 +73,7 @@ def _job_rescheduling_helper(
             job = context.job_queue.run_once(job_func, new_timeout, context=job_context)
 
 
-def _get_current_settings_helper(chat_id: int, settings: str) -> str:
+def _get_current_settings_helper(chat_id: int, settings: str, chat_name: str) -> str:
     """
     Retrieve the current settings for a specific chat based on the settings category provided.
 
@@ -89,9 +90,13 @@ def _get_current_settings_helper(chat_id: int, settings: str) -> str:
             return "Chat not found."
 
         if settings == constants.Actions.get_current_intro_settings:
-            return constants.get_intro_settings_message.format(**chat.__dict__)
+            return constants.get_intro_settings_message.format(
+                chat_name=chat_name, **chat.__dict__
+            )
         else:
-            return constants.get_kick_settings_message.format(**chat.__dict__)
+            return constants.get_kick_settings_message.format(
+                chat_name=chat_name, **chat.__dict__
+            )
 
 
 # todo rework into callback folder
@@ -120,7 +125,8 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         reply_markup = InlineKeyboardMarkup(
             create_chats_list_keyboard(user_chats, context, user_id)
         )
-        context.bot.edit_message_reply_markup(
+        context.bot.edit_message_text(
+            constants.on_start_command,
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -136,10 +142,17 @@ def button_handler(update: Update, context: CallbackContext) -> None:
                     "action": constants.Actions.set_kick_bans_settings,
                 }
             ],
-            [{"text": "Назад", "action": constants.Actions.back_to_chats}],
+            [
+                {
+                    "text": "Назад к списку чатов",
+                    "action": constants.Actions.back_to_chats,
+                }
+            ],
         ]
         reply_markup = new_keyboard_layout(button_configs, selected_chat_id)
-        context.bot.edit_message_reply_markup(
+        chat_name = get_chat_name(context.bot, selected_chat_id)
+        context.bot.edit_message_text(
+            constants.on_select_chat_message.format(chat_name=chat_name),
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -167,7 +180,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
             ],
             [
                 {
-                    "text": "Изменить сообщение при перезаходе в чат",
+                    "text": "Изменить сообщение напоминания",
                     "action": constants.Actions.set_notify_message,
                 }
             ],
@@ -181,6 +194,12 @@ def button_handler(update: Update, context: CallbackContext) -> None:
                 {
                     "text": "Изменить время напоминания",
                     "action": constants.Actions.set_notify_timeout,
+                }
+            ],
+            [
+                {
+                    "text": "Изменить необходимую длину #whois",
+                    "action": constants.Actions.set_whois_length,
                 }
             ],
             [
@@ -234,7 +253,8 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         reply_markup = InlineKeyboardMarkup(
             create_chats_list_keyboard(user_chats, context, user_id)
         )
-        context.bot.edit_message_reply_markup(
+        context.bot.edit_message_text(
+            constants.on_start_command,
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -252,6 +272,18 @@ def button_handler(update: Update, context: CallbackContext) -> None:
     elif data["action"] == constants.Actions.set_kick_timeout:
         context.bot.edit_message_text(
             text="Отправьте новое время до удаления в минутах",
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+        )
+        context.user_data["chat_id"] = data["chat_id"]
+        context.user_data["action"] = data["action"]
+
+    elif (
+        data["action"]
+        == constants.Actions.set_on_known_new_chat_member_message_response
+    ):
+        context.bot.edit_message_text(
+            text="Отправьте новый текст сообщения при перезаходе в чат",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
         )
@@ -285,6 +317,15 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         context.user_data["chat_id"] = data["chat_id"]
         context.user_data["action"] = data["action"]
 
+    elif data["action"] == constants.Actions.set_whois_length:
+        context.bot.edit_message_text(
+            text="Отправьте новую необходимую длину #whois (количество символов)",
+            chat_id=query.message.chat_id,
+            message_id=query.message.message_id,
+        )
+        context.user_data["chat_id"] = data["chat_id"]
+        context.user_data["action"] = data["action"]
+
     elif data["action"] == constants.Actions.set_on_kick_message:
         context.bot.edit_message_text(
             text="Отправьте новый текст сообщения после удаления",
@@ -305,7 +346,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_on_introduce_message_update:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения для обновления #whois",
+            text="Отправьте новый текст сообщения для обновления #whois (должно содержать хэштег #update)",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
         )
@@ -316,9 +357,12 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         keyboard = [
             [new_button("Назад", data["chat_id"], constants.Actions.set_intro_settings)]
         ]
+        chat_name = get_chat_name(context.bot, data["chat_id"])
         reply_markup = InlineKeyboardMarkup(keyboard)
         context.bot.edit_message_text(
-            text=_get_current_settings_helper(data["chat_id"], data["action"]),
+            text=_get_current_settings_helper(
+                data["chat_id"], data["action"], chat_name
+            ),
             parse_mode=ParseMode.MARKDOWN,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -336,8 +380,11 @@ def button_handler(update: Update, context: CallbackContext) -> None:
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
+        chat_name = get_chat_name(context.bot, data["chat_id"])
         context.bot.edit_message_text(
-            text=_get_current_settings_helper(data["chat_id"], data["action"]),
+            text=_get_current_settings_helper(
+                data["chat_id"], data["action"], chat_name
+            ),
             parse_mode=ParseMode.MARKDOWN,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -427,6 +474,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
             constants.Actions.set_on_introduce_message_update,
         ]:
             message = update.message.text_markdown
+            reply_message = constants.on_set_new_message
             with session_scope() as sess:
                 if action == constants.Actions.set_on_new_chat_member_message_response:
                     chat = Chat(id=chat_id, on_new_chat_member_message=message)
@@ -446,6 +494,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                         whois_length = int(message)
                         assert whois_length >= 0
                         chat = Chat(id=chat_id, whois_length=whois_length)
+                        reply_message = constants.on_set_whois_length
                     except:
                         update.message.reply_text(
                             constants.on_failed_set_whois_length_response
@@ -453,10 +502,21 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                         return
 
                 if action == constants.Actions.set_on_introduce_message_update:
+                    if (
+                        "#update"
+                        not in update.message.parse_entities(types=["hashtag"]).values()
+                    ):
+                        update.message.reply_text(
+                            constants.need_hashtag_update_response
+                        )
+                        return
                     chat = Chat(id=chat_id, on_introduce_message_update=message)
                 sess.merge(chat)
 
-            if action == constants.Actions.set_on_kick_message:
+            if action in [
+                constants.Actions.set_on_kick_message,
+                constants.Actions.set_kick_timeout,
+            ]:
                 keyboard = [
                     [
                         new_button(
@@ -471,6 +531,4 @@ def message_handler(update: Update, context: CallbackContext) -> None:
             context.user_data["action"] = None
 
             reply_markup = InlineKeyboardMarkup(keyboard)
-            update.message.reply_text(
-                constants.on_set_new_message, reply_markup=reply_markup
-            )
+            update.message.reply_text(reply_message, reply_markup=reply_markup)

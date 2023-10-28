@@ -103,7 +103,7 @@ def _get_chats_helper(
         try:
             if authorize_user(bot, x.chat_id, user_id):
                 yield {
-                    "title": bot.get_chat(x.chat_id).title or str(x.chat_id),
+                    "title": get_chat_name(bot, x.chat_id),
                     "id": x.chat_id,
                 }
         except Exception as e:
@@ -148,4 +148,9 @@ def admin(func):
         if update.message.chat_id < 0:
             return  # Skip the execution of the function in case of group chat
         return func(update, context, *args, **kwargs)
+
     return wrapper
+
+
+def get_chat_name(bot: Bot, chat_id: int):
+    return bot.get_chat(chat_id).title or str(chat_id)
