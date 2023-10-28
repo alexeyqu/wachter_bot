@@ -43,7 +43,19 @@ def on_new_chat_members(update: Update, context: CallbackContext) -> None:
                 sess.commit()
 
             if user is not None:
-                update.message.reply_text(chat.on_known_new_chat_member_message)
+                message = update.message.reply_text(
+                    chat.on_known_new_chat_member_message
+                )
+
+                context.job_queue.run_once(
+                    _delete_message,
+                    constants.default_delete_message * 60,  # 1h
+                    context={
+                        "chat_id": job.context["chat_id"],
+                        "user_id": job.context["user_id"],
+                        "message_id": message.message_id,
+                    },
+                )
                 continue
 
             message = chat.on_new_chat_member_message
@@ -122,8 +134,18 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                         whois_length=chat.whois_length
                     ),
                 )
-                update.message.reply_text(
+                message = update.message.reply_text(
                     message_markdown, parse_mode=ParseMode.MARKDOWN
+                )
+
+                context.job_queue.run_once(
+                    _delete_message,
+                    constants.default_delete_message * 60,  # 1h
+                    context={
+                        "chat_id": job.context["chat_id"],
+                        "user_id": job.context["user_id"],
+                        "message_id": message.message_id,
+                    },
                 )
                 return
 
@@ -143,8 +165,18 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 message_markdown = _mention_markdown(
                     context.bot, chat_id, user_id, constants.on_introduce_message_update
                 )
-                update.message.reply_text(
+                message = update.message.reply_text(
                     message_markdown, parse_mode=ParseMode.MARKDOWN
+                )
+
+                context.job_queue.run_once(
+                    _delete_message,
+                    constants.default_delete_message * 60,  # 1h
+                    context={
+                        "chat_id": job.context["chat_id"],
+                        "user_id": job.context["user_id"],
+                        "message_id": message.message_id,
+                    },
                 )
                 return
 
@@ -169,7 +201,19 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
 
         if removed:
             message_markdown = _mention_markdown(context.bot, chat_id, user_id, message)
-            update.message.reply_text(message_markdown, parse_mode=ParseMode.MARKDOWN)
+            message = update.message.reply_text(
+                message_markdown, parse_mode=ParseMode.MARKDOWN
+            )
+
+            context.job_queue.run_once(
+                _delete_message,
+                constants.default_delete_message * 60,  # 1h
+                context={
+                    "chat_id": job.context["chat_id"],
+                    "user_id": job.context["user_id"],
+                    "message_id": message.message_id,
+                },
+            )
 
 
 def on_notify_timeout(context: CallbackContext):
@@ -248,14 +292,36 @@ def on_kick_timeout(context: CallbackContext) -> None:
                         job.context["user_id"],
                         random.choice(constants.RH_kick_messages),
                     )
-                bot.send_message(
+                message = bot.send_message(
                     job.context["chat_id"],
                     text=message_markdown,
                     parse_mode=ParseMode.MARKDOWN,
                 )
+
+                context.job_queue.run_once(
+                    _delete_message,
+                    constants.default_delete_message * 60,  # 1h
+                    context={
+                        "chat_id": job.context["chat_id"],
+                        "user_id": job.context["user_id"],
+                        "message_id": message.message_id,
+                    },
+                )
     except Exception as e:
         tg_logger.exception(e)
-        bot.send_message(job.context["chat_id"], text=constants.on_failed_kick_response)
+        message = bot.send_message(
+            job.context["chat_id"], text=constants.on_failed_kick_response
+        )
+
+        context.job_queue.run_once(
+            _delete_message,
+            constants.default_delete_message * 60,  # 1h
+            context={
+                "chat_id": job.context["chat_id"],
+                "user_id": job.context["user_id"],
+                "message_id": message.message_id,
+            },
+        )
 
 
 def _delete_message(context: CallbackContext) -> None:
