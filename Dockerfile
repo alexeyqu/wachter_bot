@@ -1,4 +1,4 @@
-FROM python:3.6
+FROM python:3.9
 
 RUN pip install "setuptools<46" && pip install pipenv
 
@@ -10,4 +10,4 @@ RUN pipenv install --system
 COPY . /app
 WORKDIR /app
 
-CMD alembic upgrade head && python wachter/bot.py
+CMD alembic upgrade head && python -m app

@@ -4,7 +4,8 @@ from sqlalchemy import create_engine, pool
 from logging.config import fileConfig
 
 import os, sys
-sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
+
+sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 # this is the Alembic Config object, which provides
@@ -19,7 +20,8 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from wachter import model
+from src import model
+
 target_metadata = model.Base.metadata
 
 # other values from the config, defined by the needs of env.py,
@@ -27,8 +29,10 @@ target_metadata = model.Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+
 def get_uri():
-    return os.environ.get('DATABASE_URL', config.get_main_option("sqlalchemy.url")) 
+    return os.environ.get("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
+
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -43,7 +47,8 @@ def run_migrations_offline():
 
     """
     context.configure(
-        url=get_uri(), target_metadata=target_metadata, literal_binds=True)
+        url=get_uri(), target_metadata=target_metadata, literal_binds=True
+    )
 
     with context.begin_transaction():
         context.run_migrations()
@@ -59,13 +64,11 @@ def run_migrations_online():
     connectable = create_engine(get_uri())
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()
