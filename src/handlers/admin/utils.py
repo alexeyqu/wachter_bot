@@ -10,7 +10,7 @@ from src.model import User, session_scope
 from src import constants
 
 
-def new_button(text: str, chat_id: int, action: str, chat_name: str=None) -> InlineKeyboardButton:
+def new_button(text: str, chat_id: int, action: str) -> InlineKeyboardButton:
     """
     Create a new InlineKeyboardButton with associated callback data.
 
@@ -22,7 +22,7 @@ def new_button(text: str, chat_id: int, action: str, chat_name: str=None) -> Inl
     Returns:
     InlineKeyboardButton: The created InlineKeyboardButton instance.
     """
-    callback_data = json.dumps({"chat_id": chat_id, "chat_name": chat_name, "action": action})
+    callback_data = json.dumps({"chat_id": chat_id, "action": action})
     return InlineKeyboardButton(text, callback_data=callback_data)
 
 
@@ -103,7 +103,7 @@ def _get_chats_helper(
         try:
             if authorize_user(bot, x.chat_id, user_id):
                 yield {
-                    "title": bot.get_chat(x.chat_id).title or str(x.chat_id),
+                    "title": get_chat_name(bot, x.chat_id),
                     "id": x.chat_id,
                 }
         except Exception as e:
@@ -125,7 +125,7 @@ def create_chats_list_keyboard(
     List[List[InlineKeyboardButton]]: The created keyboard layout.
     """
     return [
-        [new_button(chat["title"], chat["id"], constants.Actions.select_chat, chat["title"])]
+        [new_button(chat["title"], chat["id"], constants.Actions.select_chat)]
         for chat in user_chats
         if authorize_user(context.bot, chat["id"], user_id)
     ]
@@ -150,3 +150,7 @@ def admin(func):
         return func(update, context, *args, **kwargs)
 
     return wrapper
+
+
+def get_chat_name(bot: Bot, chat_id: int):
+    return bot.get_chat(chat_id).title or str(chat_id)

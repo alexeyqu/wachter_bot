@@ -14,6 +14,7 @@ from .utils import (
     create_chats_list_keyboard,
     new_button,
     new_keyboard_layout,
+    get_chat_name,
 )
 
 from src.logging import tg_logger
@@ -89,9 +90,13 @@ def _get_current_settings_helper(chat_id: int, settings: str, chat_name: str) ->
             return "Chat not found."
 
         if settings == constants.Actions.get_current_intro_settings:
-            return constants.get_intro_settings_message.format(chat_name=chat_name, **chat.__dict__)
+            return constants.get_intro_settings_message.format(
+                chat_name=chat_name, **chat.__dict__
+            )
         else:
-            return constants.get_kick_settings_message.format(chat_name=chat_name, **chat.__dict__)
+            return constants.get_kick_settings_message.format(
+                chat_name=chat_name, **chat.__dict__
+            )
 
 
 # todo rework into callback folder
@@ -111,7 +116,6 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     if data["action"] == constants.Actions.start_select_chat:
         user_id = query.from_user.id
-        context.user_data["chat_name"] = None
         user_chats = get_chats_list(user_id, context)
 
         if len(user_chats) == 0:
@@ -130,7 +134,6 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     if data["action"] == constants.Actions.select_chat:
         selected_chat_id = data["chat_id"]
-        context.user_data["chat_name"] = data["chat_name"] if "chat_name" in data else context.user_data["chat_name"]
         button_configs = [
             [{"text": "Приветствия", "action": constants.Actions.set_intro_settings}],
             [
@@ -139,11 +142,17 @@ def button_handler(update: Update, context: CallbackContext) -> None:
                     "action": constants.Actions.set_kick_bans_settings,
                 }
             ],
-            [{"text": "Назад к списку чатов", "action": constants.Actions.back_to_chats}],
+            [
+                {
+                    "text": "Назад к списку чатов",
+                    "action": constants.Actions.back_to_chats,
+                }
+            ],
         ]
         reply_markup = new_keyboard_layout(button_configs, selected_chat_id)
+        chat_name = get_chat_name(context.bot, selected_chat_id)
         context.bot.edit_message_text(
-            constants.on_select_chat_message.format(chat_name=context.user_data["chat_name"]),
+            constants.on_select_chat_message.format(chat_name=chat_name),
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -240,7 +249,6 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.back_to_chats:
         user_id = query.message.chat_id
-        context.user_data["chat_name"] = None
         user_chats = list(get_chats_list(user_id, context))
         reply_markup = InlineKeyboardMarkup(
             create_chats_list_keyboard(user_chats, context, user_id)
@@ -270,7 +278,10 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         context.user_data["chat_id"] = data["chat_id"]
         context.user_data["action"] = data["action"]
 
-    elif data["action"] == constants.Actions.set_on_known_new_chat_member_message_response:
+    elif (
+        data["action"]
+        == constants.Actions.set_on_known_new_chat_member_message_response
+    ):
         context.bot.edit_message_text(
             text="Отправьте новый текст сообщения при перезаходе в чат",
             chat_id=query.message.chat_id,
@@ -346,9 +357,12 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         keyboard = [
             [new_button("Назад", data["chat_id"], constants.Actions.set_intro_settings)]
         ]
+        chat_name = get_chat_name(context.bot, data["chat_id"])
         reply_markup = InlineKeyboardMarkup(keyboard)
         context.bot.edit_message_text(
-            text=_get_current_settings_helper(data["chat_id"], data["action"], context.user_data["chat_name"]),
+            text=_get_current_settings_helper(
+                data["chat_id"], data["action"], chat_name
+            ),
             parse_mode=ParseMode.MARKDOWN,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -366,8 +380,11 @@ def button_handler(update: Update, context: CallbackContext) -> None:
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
+        chat_name = get_chat_name(context.bot, data["chat_id"])
         context.bot.edit_message_text(
-            text=_get_current_settings_helper(data["chat_id"], data["action"], context.user_data["chat_name"]),
+            text=_get_current_settings_helper(
+                data["chat_id"], data["action"], chat_name
+            ),
             parse_mode=ParseMode.MARKDOWN,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -486,7 +503,10 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                     chat = Chat(id=chat_id, on_introduce_message_update=message)
                 sess.merge(chat)
 
-            if action in [constants.Actions.set_on_kick_message, constants.Actions.set_kick_timeout]:
+            if action in [
+                constants.Actions.set_on_kick_message,
+                constants.Actions.set_kick_timeout,
+            ]:
                 keyboard = [
                     [
                         new_button(
