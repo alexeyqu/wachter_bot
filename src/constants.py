@@ -2,6 +2,7 @@ from enum import IntEnum, auto
 
 # MESSAGES
 on_set_new_message = "Обновил сообщение."
+on_set_whois_length = "Обновил необходимую длину #whois."
 on_success_set_kick_timeout_response = "Обновил время до удаления."
 on_sucess_set_notify_timeout_response = "Обновил время до напоминания."
 on_failed_set_kick_timeout_response = "Время должно быть целым положительным числом."

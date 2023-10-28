@@ -474,6 +474,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
             constants.Actions.set_on_introduce_message_update,
         ]:
             message = update.message.text_markdown
+            reply_message = constants.on_set_new_message
             with session_scope() as sess:
                 if action == constants.Actions.set_on_new_chat_member_message_response:
                     chat = Chat(id=chat_id, on_new_chat_member_message=message)
@@ -493,6 +494,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                         whois_length = int(message)
                         assert whois_length >= 0
                         chat = Chat(id=chat_id, whois_length=whois_length)
+                        reply_message = constants.on_set_whois_length
                     except:
                         update.message.reply_text(
                             constants.on_failed_set_whois_length_response
@@ -522,5 +524,5 @@ def message_handler(update: Update, context: CallbackContext) -> None:
 
             reply_markup = InlineKeyboardMarkup(keyboard)
             update.message.reply_text(
-                constants.on_set_new_message, reply_markup=reply_markup
+                reply_message, reply_markup=reply_markup
             )
