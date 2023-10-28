@@ -262,9 +262,10 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_on_new_chat_member_message_response:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения при входе в чат",
+            text="Отправьте новый текст сообщения при входе в чат. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
+            parse_mode=ParseMode.MARKDOWN,
         )
         context.user_data["chat_id"] = data["chat_id"]
         context.user_data["action"] = data["action"]
@@ -283,43 +284,47 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         == constants.Actions.set_on_known_new_chat_member_message_response
     ):
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения при перезаходе в чат",
+            text="Отправьте новый текст сообщения при перезаходе в чат. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
+            parse_mode=ParseMode.MARKDOWN,
         )
         context.user_data["chat_id"] = data["chat_id"]
         context.user_data["action"] = data["action"]
 
     elif data["action"] == constants.Actions.set_notify_message:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения напоминания",
+            text="Отправьте новый текст сообщения напоминания. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
+            parse_mode=ParseMode.MARKDOWN,
         )
         context.user_data["chat_id"] = data["chat_id"]
         context.user_data["action"] = data["action"]
 
     elif data["action"] == constants.Actions.set_on_new_chat_member_message_response:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения при входе в чат",
+            text="Отправьте новый текст сообщения при входе в чат. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
+            parse_mode=ParseMode.MARKDOWN,
         )
         context.user_data["chat_id"] = data["chat_id"]
         context.user_data["action"] = data["action"]
 
     elif data["action"] == constants.Actions.set_on_successful_introducion_response:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения после представления",
+            text="Отправьте новый текст сообщения после представления. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
+            parse_mode=ParseMode.MARKDOWN,
         )
         context.user_data["chat_id"] = data["chat_id"]
         context.user_data["action"] = data["action"]
 
     elif data["action"] == constants.Actions.set_whois_length:
         context.bot.edit_message_text(
-            text="Отправьте новую необходимую длину #whois (количество символов)",
+            text="Отправьте новую необходимую длину #whois (количество символов).",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
         )
@@ -328,16 +333,17 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_on_kick_message:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения после удаления",
+            text="Отправьте новый текст сообщения после удаления. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
+            parse_mode=ParseMode.MARKDOWN,
         )
         context.user_data["chat_id"] = data["chat_id"]
         context.user_data["action"] = data["action"]
 
     elif data["action"] == constants.Actions.set_notify_timeout:
         context.bot.edit_message_text(
-            text="Отправьте новое время до напоминания в минутах",
+            text="Отправьте новое время до напоминания в минутах.",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
         )
@@ -346,9 +352,10 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_on_introduce_message_update:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения для обновления #whois (должно содержать хэштег #update)",
+            text="Отправьте новый текст сообщения для обновления #whois (должно содержать хэштег #update). Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
+            parse_mode=ParseMode.MARKDOWN,
         )
         context.user_data["chat_id"] = data["chat_id"]
         context.user_data["action"] = data["action"]

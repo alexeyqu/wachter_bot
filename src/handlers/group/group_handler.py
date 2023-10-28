@@ -26,12 +26,7 @@ def on_new_chat_members(update: Update, context: CallbackContext) -> None:
 
     for user_id in user_ids:
         for job in context.job_queue.jobs():
-            if (
-                job.context["user_id"] == user_id
-                and job.context["chat_id"] == chat_id
-                and job.enabled == True
-            ):
-                job.enabled = False
+            if job.context["user_id"] == user_id and job.context["chat_id"] == chat_id:
                 job.schedule_removal()
 
         with session_scope() as sess:
@@ -158,21 +153,17 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
 
         removed = False
         for job in context.job_queue.jobs():
-            if (
-                job.context["user_id"] == user_id
-                and job.context["chat_id"] == chat_id
-                and job.enabled == True
-            ):
-                try:
-                    context.bot.delete_message(
-                        job.context["chat_id"], job.context["message_id"]
-                    )
-                except Exception as e:
-                    tg_logger.warning(
-                        f"can't delete {job.context['message_id']} from {job.context['chat_id']}",
-                        exc_info=e,
-                    )
-                job.enabled = False
+            if job.context["user_id"] == user_id and job.context["chat_id"] == chat_id:
+                if "message_id" in job.context:
+                    try:
+                        context.bot.delete_message(
+                            job.context["chat_id"], job.context["message_id"]
+                        )
+                    except Exception as e:
+                        tg_logger.warning(
+                            f"can't delete {job.context['message_id']} from {job.context['chat_id']}",
+                            exc_info=e,
+                        )
                 job.schedule_removal()
                 removed = True
 
