@@ -51,8 +51,8 @@ def on_new_chat_members(update: Update, context: CallbackContext) -> None:
                     _delete_message,
                     constants.default_delete_message * 60,  # 1h
                     context={
-                        "chat_id": job.context["chat_id"],
-                        "user_id": job.context["user_id"],
+                        "chat_id": chat_id,
+                        "user_id": user_id,
                         "message_id": message.message_id,
                     },
                 )
@@ -142,8 +142,8 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                     _delete_message,
                     constants.default_delete_message * 60,  # 1h
                     context={
-                        "chat_id": job.context["chat_id"],
-                        "user_id": job.context["user_id"],
+                        "chat_id": chat_id,
+                        "user_id": user_id,
                         "message_id": message.message_id,
                     },
                 )
@@ -173,8 +173,8 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                     _delete_message,
                     constants.default_delete_message * 60,  # 1h
                     context={
-                        "chat_id": job.context["chat_id"],
-                        "user_id": job.context["user_id"],
+                        "chat_id": chat_id,
+                        "user_id": user_id,
                         "message_id": message.message_id,
                     },
                 )
@@ -209,8 +209,8 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 _delete_message,
                 constants.default_delete_message * 60,  # 1h
                 context={
-                    "chat_id": job.context["chat_id"],
-                    "user_id": job.context["user_id"],
+                    "chat_id": chat_id,
+                    "user_id": user_id,
                     "message_id": message.message_id,
                 },
             )
