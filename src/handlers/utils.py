@@ -26,6 +26,7 @@ def admin(func):
 
     return wrapper
 
+
 def debug(func):
     """
     A decorator to ensure that a particular function is only executed for debug purposes, i.e. by someone from the team.
