@@ -3,6 +3,7 @@ from telegram.ext import (
     CommandHandler,
     Filters,
     MessageHandler,
+    PicklePersistence,
     CallbackQueryHandler,
     ChatMemberHandler,
 )
@@ -13,7 +14,10 @@ import os
 
 
 def main():
-    updater = Updater(os.environ["TELEGRAM_TOKEN"])
+    updater = Updater(
+        os.environ["TELEGRAM_TOKEN"],
+        persistence=PicklePersistence(filename="persistent_storage.pickle", store_callback_data=True),
+    )
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("help", handlers.help_handler))
