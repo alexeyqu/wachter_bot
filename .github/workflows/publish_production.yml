@@ -79,6 +79,8 @@ jobs:
             echo POSTGRES_URL=${{ env.POSTGRES_URL }} >> .env
             echo TELEGRAM_TOKEN=${{ env.TELEGRAM_TOKEN }} >> .env
             echo TELEGRAM_ERROR_CHAT_ID=${{ env.TELEGRAM_ERROR_CHAT_ID }} >> .env
+            echo DEBUG=False >> .env
+            echo TEAM_TELEGRAM_IDS=${{ secrets.TEAM_TELEGRAM_IDS }} >> .env
             docker-compose -f docker-compose.${{ env.PACKAGE_LABEL }}.yml stop
             docker-compose -f docker-compose.${{ env.PACKAGE_LABEL }}.yml pull
             docker-compose -f docker-compose.${{ env.PACKAGE_LABEL }}.yml up --force-recreate -d

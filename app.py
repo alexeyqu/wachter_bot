@@ -17,6 +17,7 @@ def main():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("help", handlers.help_handler))
+    dp.add_handler(CommandHandler("listjobs", handlers.list_jobs_handler))
 
     # group UX
     dp.add_handler(
