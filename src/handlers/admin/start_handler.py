@@ -2,8 +2,9 @@ from telegram import InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext
 
 from src import constants
+from src.handlers.utils import admin
 
-from .utils import get_chats_list, create_chats_list_keyboard, admin
+from .utils import get_chats_list, create_chats_list_keyboard
 
 
 @admin
