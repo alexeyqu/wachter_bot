@@ -2,6 +2,7 @@ from telegram import InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext
 
 from src import constants
+from src.texts import _
 
 from .utils import get_chats_list, create_chats_list_keyboard, admin
 
@@ -35,4 +36,4 @@ def start_handler(update: Update, context: CallbackContext) -> None:
     )
 
     # Send a message to the user with the inline keyboard
-    update.message.reply_text(constants.on_start_command, reply_markup=reply_markup)
+    update.message.reply_text(_("msg__start_command"), reply_markup=reply_markup)
