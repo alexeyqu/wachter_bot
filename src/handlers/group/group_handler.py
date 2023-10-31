@@ -5,6 +5,7 @@ from telegram.ext import CallbackContext
 
 from src.logging import tg_logger
 from src import constants
+from src.texts import _
 from src.model import Chat, User, session_scope
 
 
@@ -62,7 +63,7 @@ def on_new_chat_members(update: Update, context: CallbackContext) -> None:
             kick_timeout = chat.kick_timeout
             notify_timeout = chat.notify_timeout
 
-        if message == constants.skip_on_new_chat_member_message:
+        if message == _("msg__skip_new_chat_member"):
             continue
 
         message_markdown = _mention_markdown(context.bot, chat_id, user_id, message)
@@ -130,9 +131,7 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                     context.bot,
                     chat_id,
                     user_id,
-                    constants.on_short_whois_message.format(
-                        whois_length=chat.whois_length
-                    ),
+                    _("msg__short_whois").format(whois_length=chat.whois_length),
                 )
                 message = update.message.reply_text(
                     message_markdown, parse_mode=ParseMode.MARKDOWN
@@ -163,7 +162,7 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 not in update.message.parse_entities(types=["hashtag"]).values()
             ):
                 message_markdown = _mention_markdown(
-                    context.bot, chat_id, user_id, constants.on_introduce_message_update
+                    context.bot, chat_id, user_id, _("msg__introduce_message_update")
                 )
                 message = update.message.reply_text(
                     message_markdown, parse_mode=ParseMode.MARKDOWN
@@ -310,7 +309,7 @@ def on_kick_timeout(context: CallbackContext) -> None:
     except Exception as e:
         tg_logger.exception(e)
         message = bot.send_message(
-            job.context["chat_id"], text=constants.on_failed_kick_response
+            job.context["chat_id"], text=_("msg__failed_kick_response")
         )
 
         context.job_queue.run_once(
