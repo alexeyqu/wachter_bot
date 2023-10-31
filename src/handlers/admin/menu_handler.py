@@ -469,7 +469,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                 timeout = int(message)
                 assert timeout >= 0
             except:
-                update.message.reply_text(constants.on_failed_set_kick_timeout_response)
+                update.message.reply_text(_("msg__failed_kick_response"))
                 return
             with session_scope() as sess:
                 chat = Chat(id=chat_id, notify_timeout=timeout)
@@ -500,7 +500,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
             constants.Actions.set_on_introduce_message_update,
         ]:
             message = update.message.text_markdown
-            reply_message = constants.on_set_new_message
+            reply_message = _("msg__set_new_message")
             with session_scope() as sess:
                 if action == constants.Actions.set_on_new_chat_member_message_response:
                     chat = Chat(id=chat_id, on_new_chat_member_message=message)
