@@ -1,4 +1,5 @@
 from enum import IntEnum, auto
+import json, os
 
 
 default_kick_timeout = 1440  # 24h in minutes
@@ -40,3 +41,6 @@ RH_kick_messages = [
 ]
 
 RH_CHAT_ID = -1001147286684
+
+DEBUG = os.environ.get("DEBUG", True)
+TEAM_TELEGRAM_IDS = json.loads(os.environ.get("TEAM_TELEGRAM_IDS", "[]"))
