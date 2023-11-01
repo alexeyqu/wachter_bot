@@ -295,7 +295,6 @@ def _send_message_with_deletion(
         timeout_m * 60,
         context={
             "chat_id": chat_id,
-            "user_id": user_id,
             "message_id": sent_message.message_id,
         },
     )
