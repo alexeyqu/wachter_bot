@@ -4,11 +4,8 @@ _texts = {
     "msg__sucess_set_notify_timeout_response": "Обновил время до напоминания.",
     "msg__failed_set_kick_timeout_response": "Время должно быть целым положительным числом.",
     "msg__failed_kick_response": "Я не справился.",
-    "msg__success_kick_response": "%USER\_MENTION% не представился и был кикнут из чата.",
-    "msg__success_notify_response": "Обновил время до напоминания.",
     "msg__start_command": "Выберите чат:",
     "msg__select_chat": "Выбран чат {chat_name}. Теперь выберите действие:",
-    "msg__skip_on_new_chat_member_message": "%SKIP%",
     "msg__help": """Привет! Я - бот Вахтер. Я слежу, чтобы в твоем чате были только представившиеся пользователи. Для начала работы добавь меня в чат и сделай меня администратором.
 После этого для настройки бота тебе нужно написать мне в личных сообщениях /start.
 По умолчанию я не удаляю из чата непредставившихся, а лишь записываю все сообщения с хэштегом #whois.
@@ -58,28 +55,28 @@ _texts = {
     "msg__get_intro_settings": """
 Выбран чат {chat_name}.
 ---
-Сообщение для нового участника чата: {on_new_chat_member_message}
+Сообщение для нового участника чата: `{on_new_chat_member_message}`
 ---
-Сообщение при перезаходе в чат: {on_known_new_chat_member_message}
+Сообщение при перезаходе в чат: `{on_known_new_chat_member_message}`
 ---
-Сообщение после успешного представления: {on_introduce_message}
+Сообщение после успешного представления: `{on_introduce_message}`
 ---
-Сообщение напоминания: {notify_message}
+Сообщение напоминания: `{notify_message}`
 ---
 Необходимая длина представления с хэштегом #whois для новых пользователей: {whois_length}
 ---
 Время до напоминания в минутах (целое положительное число): {notify_timeout}
 ---
-Сообщение для обновления информации в #whois: {on_introduce_message_update}
+Сообщение для обновления информации в #whois: `{on_introduce_message_update}`
 """,
     "msg__get_kick_settings": """
 Выбран чат {chat_name}.
 ---
 Время до удаления в минутах (целое положительное число): {kick_timeout}
 ---
-Сообщение после удаления: {on_kick_message}
+Сообщение после удаления: `{on_kick_message}`
 """,
-    "msg__short_whois": "%USER\_MENTION%, напишите про себя побольше, хотя бы {whois_length} символов. Спасибо!",
+    "msg__short_whois": "%USER_MENTION%, напишите про себя побольше, хотя бы {whois_length} символов. Спасибо!",
     "msg__skip_new_chat_member": "%SKIP%",
 }
 

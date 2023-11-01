@@ -26,6 +26,10 @@ services:
     container_name: wachter-dev
     build:
       context: .
+    volumes:
+      - type: bind
+        source: ./jobs.json
+        target: /app/jobs.json
     environment:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
       - TELEGRAM_ERROR_CHAT_ID=${TELEGRAM_ERROR_CHAT_ID}

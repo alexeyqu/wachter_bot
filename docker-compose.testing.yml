@@ -4,6 +4,10 @@ services:
   wachterbot:
     container_name: wachterbot-testing
     image: ghcr.io/alexeyqu/wachter_bot/wachterbot:testing
+    volumes:
+      - type: bind
+        source: /home/github/testing/jobs.json
+        target: /app/jobs.json 
     environment:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
       - TELEGRAM_ERROR_CHAT_ID=${TELEGRAM_ERROR_CHAT_ID}

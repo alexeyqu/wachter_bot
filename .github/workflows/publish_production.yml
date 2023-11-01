@@ -76,6 +76,7 @@ jobs:
             echo $CR_PAT | docker login  ghcr.io -u $GITHUB_USERNAME
             cd ${{ env.ROOT_DIR }}
             touch .env
+            touch jobs.json
             echo POSTGRES_URL=${{ env.POSTGRES_URL }} >> .env
             echo TELEGRAM_TOKEN=${{ env.TELEGRAM_TOKEN }} >> .env
             echo TELEGRAM_ERROR_CHAT_ID=${{ env.TELEGRAM_ERROR_CHAT_ID }} >> .env

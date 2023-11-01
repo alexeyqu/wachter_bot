@@ -3,6 +3,7 @@ from telegram.ext import CallbackContext
 
 from src import constants
 from src.model import Chat, User, session_scope
+from src.handlers.admin.utils import new_keyboard_layout
 from src.texts import _
 
 
@@ -32,6 +33,10 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
                 chat.notify_message = _("msg__notify")
                 chat.on_introduce_message_update = _("msg__introduce_update")
 
+                chat.kick_timeout = constants.default_kick_timeout
+                chat.notify_timeout = constants.default_notify_timeout
+                chat.whois_length = constants.default_whois_length
+
                 sess.add(chat)
                 # hack with adding an empty #whois to prevent slow /start cmd
                 # TODO after v1.0: rework the DB schema
@@ -42,11 +47,30 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
                 )
                 sess.merge(user)
                 # notify the admin about a new chat
+                button_configs = [
+                    [
+                        {
+                            "text": "Приветствия",
+                            "action": constants.Actions.set_intro_settings,
+                        }
+                    ],
+                    [
+                        {
+                            "text": "Удаление и блокировка",
+                            "action": constants.Actions.set_kick_bans_settings,
+                        }
+                    ],
+                    [{"text": "Назад", "action": constants.Actions.back_to_chats}],
+                ]
+                reply_markup = new_keyboard_layout(
+                    button_configs, update.effective_chat.id
+                )
                 context.bot.send_message(
                     update.effective_user.id,
-                    constants.on_make_admin_direct_message.format(
+                    _("msg__make_admin_direct").format(
                         chat_name=update.effective_chat.title
                     ),
+                    reply_markup=reply_markup,
                 )
 
         context.bot.send_message(update.effective_chat.id, _("msg__make_admin"))
