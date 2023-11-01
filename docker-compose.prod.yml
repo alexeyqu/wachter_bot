@@ -6,7 +6,7 @@ services:
     image: ghcr.io/alexeyqu/wachter_bot/wachterbot:prod
     volumes:
       - type: bind
-        source: /etc/wachter/prod/jobs.json
+        source: /home/github/prod/jobs.json
         target: /app/jobs.json 
     environment:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
