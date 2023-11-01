@@ -29,18 +29,5 @@ class Actions(IntEnum):
     set_whois_length = auto()
     set_on_introduce_message_update = auto()
 
-
-RH_kick_messages = [
-    "Хакер %USER_MENTION% молчит и покидает чат. ⚰",
-    "Хакера %USER_MENTION% забрал роскомнадзор",
-    "Хакера %USER_MENTION% забрал Интерпол",
-    "Хакер %USER_MENTION% провалил дедлайн",
-    "Хакер %USER_MENTION% не смог выйти из VIM",
-    "Хакер %USER_MENTION% пошёл кормить рыбок",
-    "Хакер %USER_MENTION% провалил испытание",
-]
-
-RH_CHAT_ID = -1001147286684
-
 DEBUG = os.environ.get("DEBUG", True)
 TEAM_TELEGRAM_IDS = json.loads(os.environ.get("TEAM_TELEGRAM_IDS", "[]"))

@@ -284,13 +284,6 @@ def on_kick_timeout(context: CallbackContext) -> None:
                     job.context["user_id"],
                     chat.on_kick_message,
                 )
-                if job.context["chat_id"] == constants.RH_CHAT_ID:
-                    message_markdown = _mention_markdown(
-                        bot,
-                        job.context["chat_id"],
-                        job.context["user_id"],
-                        random.choice(constants.RH_kick_messages),
-                    )
                 message = bot.send_message(
                     job.context["chat_id"],
                     text=message_markdown,
