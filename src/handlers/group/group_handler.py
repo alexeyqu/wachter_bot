@@ -44,7 +44,7 @@ def on_new_chat_members(update: Update, context: CallbackContext) -> None:
                 sess.commit()
 
             if user is not None:
-                send_message_with_deletion(context, chat_id, user_id, chat.on_known_new_chat_member_message, constants.default_delete_message)
+                send_message_with_deletion(context, chat_id, user_id, chat.on_known_new_chat_member_message)
                 continue
 
             message = chat.on_new_chat_member_message
@@ -114,7 +114,7 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 sess.commit()
 
             if len(update.message.text) <= chat.whois_length:
-                send_message_with_deletion(context, chat_id, user_id, _("msg__short_whois").format(whois_length=chat.whois_length), constants.default_delete_message)
+                send_message_with_deletion(context, chat_id, user_id, _("msg__short_whois").format(whois_length=chat.whois_length))
                 return
 
             message = chat.on_introduce_message
@@ -130,7 +130,7 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 and "#update"
                 not in update.message.parse_entities(types=["hashtag"]).values()
             ):
-                send_message_with_deletion(context, chat_id, user_id, _("msg__introduce_message_update"), constants.default_delete_message)
+                send_message_with_deletion(context, chat_id, user_id, _("msg__introduce_message_update"))
                 return
 
             user = User(chat_id=chat_id, user_id=user_id, whois=update.message.text)
@@ -251,7 +251,7 @@ def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: Message) ->
     # \ нужен из-за формата сообщений в маркдауне
     return message.replace("%USER\_MENTION%", user_mention_markdown)
 
-def send_message_with_deletion(context: CallbackContext, chat_id: int, user_id: int, message: str, timeout_m: int=constants.default_delete_message):
+def send_message_with_deletion(context: CallbackContext, chat_id: int, user_id: int, message: str, timeout_m: int=constants.default_delete_message_timeout_m):
     message_markdown = _mention_markdown(
             context.bot, chat_id, user_id, message
         )

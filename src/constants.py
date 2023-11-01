@@ -6,7 +6,7 @@ default_kick_timeout = 1440  # 24h in minutes
 default_notify_timeout = 1380  # 23h in minutes
 notify_delta = 10
 default_whois_length = 60
-default_delete_message = 60
+default_delete_message_timeout_m = 60
 
 
 # ACTIONS
