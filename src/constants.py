@@ -28,5 +28,6 @@ class Actions(IntEnum):
     set_whois_length = auto()
     set_on_introduce_message_update = auto()
 
+
 DEBUG = os.environ.get("DEBUG", True)
 TEAM_TELEGRAM_IDS = json.loads(os.environ.get("TEAM_TELEGRAM_IDS", "[]"))
