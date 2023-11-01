@@ -256,7 +256,7 @@ def send_message_with_deletion(context: CallbackContext, chat_id: int, user_id: 
             context.bot, chat_id, user_id, message
         )
 
-    message = context.bot.send_message(
+    sent_message = context.bot.send_message(
         chat_id, text=message_markdown, parse_mode=ParseMode.MARKDOWN
     )
 
@@ -266,6 +266,6 @@ def send_message_with_deletion(context: CallbackContext, chat_id: int, user_id: 
         context={
             "chat_id": chat_id,
             "user_id": user_id,
-            "message_id": message.message_id,
+            "message_id": sent_message.message_id,
         },
     )
