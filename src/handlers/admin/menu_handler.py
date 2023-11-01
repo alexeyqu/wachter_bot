@@ -6,6 +6,7 @@ from typing import Callable, Optional
 
 from src import constants
 from src.model import Chat, session_scope
+from src.texts import _
 
 from src.handlers.group.group_handler import on_kick_timeout, on_notify_timeout
 
@@ -90,12 +91,16 @@ def _get_current_settings_helper(chat_id: int, settings: str, chat_name: str) ->
             return "Chat not found."
 
         if settings == constants.Actions.get_current_intro_settings:
-            return constants.get_intro_settings_message.format(
-                chat_name=chat_name, **chat.__dict__
+            return (
+                _("msg__get_intro_settings")
+                .format(chat_name=chat_name, **chat.__dict__)
+                .replace("%USER\\_MENTION%", "%USER_MENTION%")
             )
         else:
-            return constants.get_kick_settings_message.format(
-                chat_name=chat_name, **chat.__dict__
+            return (
+                _("msg__get_kick_settings")
+                .format(chat_name=chat_name, **chat.__dict__)
+                .replace("%USER\\_MENTION%", "%USER_MENTION%")
             )
 
 
@@ -119,14 +124,14 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         user_chats = get_chats_list(user_id, context)
 
         if len(user_chats) == 0:
-            update.message.reply_text("У вас нет доступных чатов.")
+            update.message.reply_text(_("msg__no_chats_available"))
             return
 
         reply_markup = InlineKeyboardMarkup(
             create_chats_list_keyboard(user_chats, context, user_id)
         )
         context.bot.edit_message_text(
-            constants.on_start_command,
+            _("msg__start_command"),
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -135,16 +140,16 @@ def button_handler(update: Update, context: CallbackContext) -> None:
     if data["action"] == constants.Actions.select_chat:
         selected_chat_id = data["chat_id"]
         button_configs = [
-            [{"text": "Приветствия", "action": constants.Actions.set_intro_settings}],
+            [{"text": _("btn__intro"), "action": constants.Actions.set_intro_settings}],
             [
                 {
-                    "text": "Удаление и блокировка",
+                    "text": _("btn__kicks"),
                     "action": constants.Actions.set_kick_bans_settings,
                 }
             ],
             [
                 {
-                    "text": "Назад к списку чатов",
+                    "text": _("btn__back_to_chats"),
                     "action": constants.Actions.back_to_chats,
                 }
             ],
@@ -152,7 +157,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         reply_markup = new_keyboard_layout(button_configs, selected_chat_id)
         chat_name = get_chat_name(context.bot, selected_chat_id)
         context.bot.edit_message_text(
-            constants.on_select_chat_message.format(chat_name=chat_name),
+            _("msg__select_chat").format(chat_name=chat_name),
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -162,53 +167,53 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         button_configs = [
             [
                 {
-                    "text": "Посмотреть текущие настройки",
+                    "text": _("btn__current_settings"),
                     "action": constants.Actions.get_current_intro_settings,
                 }
             ],
             [
                 {
-                    "text": "Изменить сообщение при входе в чат",
+                    "text": _("btn__change_welcome_message"),
                     "action": constants.Actions.set_on_new_chat_member_message_response,
                 }
             ],
             [
                 {
-                    "text": "Изменить сообщение при перезаходе в чат",
+                    "text": _("btn__change_rewelcome_message"),
                     "action": constants.Actions.set_on_known_new_chat_member_message_response,
                 }
             ],
             [
                 {
-                    "text": "Изменить сообщение напоминания",
+                    "text": _("btn__change_notify_message"),
                     "action": constants.Actions.set_notify_message,
                 }
             ],
             [
                 {
-                    "text": "Изменить сообщение после представления",
+                    "text": _("btn__change_sucess_message"),
                     "action": constants.Actions.set_on_successful_introducion_response,
                 }
             ],
             [
                 {
-                    "text": "Изменить время напоминания",
+                    "text": _("btn__change_notify_timeout"),
                     "action": constants.Actions.set_notify_timeout,
                 }
             ],
             [
                 {
-                    "text": "Изменить необходимую длину #whois",
+                    "text": _("btn__change_whois_length"),
                     "action": constants.Actions.set_whois_length,
                 }
             ],
             [
                 {
-                    "text": "Изменить сообщение для обновления #whois",
+                    "text": _("btn__change_whois_message"),
                     "action": constants.Actions.set_on_introduce_message_update,
                 }
             ],
-            [{"text": "Назад", "action": constants.Actions.select_chat}],
+            [{"text": _("btn__back"), "action": constants.Actions.select_chat}],
         ]
         reply_markup = new_keyboard_layout(button_configs, selected_chat_id)
         context.bot.edit_message_reply_markup(
@@ -222,23 +227,23 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         button_configs = [
             [
                 {
-                    "text": "Посмотреть текущие настройки",
+                    "text": _("btn__current_settings"),
                     "action": constants.Actions.get_current_kick_settings,
                 }
             ],
             [
                 {
-                    "text": "Изменить время до удаления",
+                    "text": _("btn__change_kick_timeout"),
                     "action": constants.Actions.set_kick_timeout,
                 }
             ],
             [
                 {
-                    "text": "Изменить сообщение после удаления",
+                    "text": _("btn__change_kick_messge"),
                     "action": constants.Actions.set_on_kick_message,
                 }
             ],
-            [{"text": "Назад", "action": constants.Actions.select_chat}],
+            [{"text": _("btn__back"), "action": constants.Actions.select_chat}],
         ]
         reply_markup = new_keyboard_layout(button_configs, selected_chat_id)
         context.bot.edit_message_reply_markup(
@@ -254,7 +259,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
             create_chats_list_keyboard(user_chats, context, user_id)
         )
         context.bot.edit_message_text(
-            constants.on_start_command,
+            _("msg__start_command"),
             reply_markup=reply_markup,
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
@@ -262,7 +267,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_on_new_chat_member_message_response:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения при входе в чат. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
+            text=_("msg__set_new_welcome_message"),
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
             parse_mode=ParseMode.MARKDOWN,
@@ -272,7 +277,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_kick_timeout:
         context.bot.edit_message_text(
-            text="Отправьте новое время до удаления в минутах",
+            text=_("msg__set_new_kick_timout"),
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
         )
@@ -284,7 +289,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         == constants.Actions.set_on_known_new_chat_member_message_response
     ):
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения при перезаходе в чат. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
+            text=_("msg__set_new_rewelcome_message"),
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
             parse_mode=ParseMode.MARKDOWN,
@@ -294,7 +299,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_notify_message:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения напоминания. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
+            text=_("msg__set_new_notify_message"),
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
             parse_mode=ParseMode.MARKDOWN,
@@ -304,7 +309,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_on_new_chat_member_message_response:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения при входе в чат. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
+            text=_("msg__set_new_welcome_message"),
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
             parse_mode=ParseMode.MARKDOWN,
@@ -314,7 +319,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_on_successful_introducion_response:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения после представления. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
+            text=_("msg__set_new_sucess_message"),
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
             parse_mode=ParseMode.MARKDOWN,
@@ -324,7 +329,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_whois_length:
         context.bot.edit_message_text(
-            text="Отправьте новую необходимую длину #whois (количество символов).",
+            text=_("msg__set_new_whois_length"),
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
         )
@@ -333,7 +338,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_on_kick_message:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения после удаления. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
+            text=_("msg__set_new_kick_message"),
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
             parse_mode=ParseMode.MARKDOWN,
@@ -343,7 +348,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_notify_timeout:
         context.bot.edit_message_text(
-            text="Отправьте новое время до напоминания в минутах.",
+            text=_("msg__set_new_notify_timeout"),
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
         )
@@ -352,7 +357,7 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.set_on_introduce_message_update:
         context.bot.edit_message_text(
-            text="Отправьте новый текст сообщения для обновления #whois (должно содержать хэштег #update). Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
+            text=_("msg__set_new_whois_message"),
             chat_id=query.message.chat_id,
             message_id=query.message.message_id,
             parse_mode=ParseMode.MARKDOWN,
@@ -362,7 +367,13 @@ def button_handler(update: Update, context: CallbackContext) -> None:
 
     elif data["action"] == constants.Actions.get_current_intro_settings:
         keyboard = [
-            [new_button("Назад", data["chat_id"], constants.Actions.set_intro_settings)]
+            [
+                new_button(
+                    _("btn__back"),
+                    data["chat_id"],
+                    constants.Actions.set_intro_settings,
+                )
+            ]
         ]
         chat_name = get_chat_name(context.bot, data["chat_id"])
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -382,7 +393,9 @@ def button_handler(update: Update, context: CallbackContext) -> None:
         keyboard = [
             [
                 new_button(
-                    "Назад", data["chat_id"], constants.Actions.set_kick_bans_settings
+                    _("btn__back"),
+                    data["chat_id"],
+                    constants.Actions.set_kick_bans_settings,
                 )
             ]
         ]
@@ -431,7 +444,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                 timeout = int(message)
                 assert timeout >= 0
             except:
-                update.message.reply_text(constants.on_failed_set_kick_timeout_response)
+                update.message.reply_text(_("msg__failed_set_kick_timeout_response"))
                 return
             with session_scope() as sess:
                 chat = Chat(id=chat_id, kick_timeout=timeout)
@@ -440,11 +453,17 @@ def message_handler(update: Update, context: CallbackContext) -> None:
             _job_rescheduling_helper(on_kick_timeout, timeout, context, chat_id)
 
             keyboard = [
-                [new_button("Назад", chat_id, constants.Actions.set_kick_bans_settings)]
+                [
+                    new_button(
+                        _("btn__back"),
+                        chat_id,
+                        constants.Actions.set_kick_bans_settings,
+                    )
+                ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             update.message.reply_text(
-                constants.on_success_set_kick_timeout_response,
+                _("msg__success_set_kick_timeout_response"),
                 reply_markup=reply_markup,
             )
 
@@ -454,7 +473,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                 timeout = int(message)
                 assert timeout >= 0
             except:
-                update.message.reply_text(constants.on_failed_set_kick_timeout_response)
+                update.message.reply_text(_("msg__failed_kick_response"))
                 return
             with session_scope() as sess:
                 chat = Chat(id=chat_id, notify_timeout=timeout)
@@ -463,11 +482,15 @@ def message_handler(update: Update, context: CallbackContext) -> None:
             _job_rescheduling_helper(on_notify_timeout, timeout, context, chat_id)
 
             keyboard = [
-                [new_button("Назад", chat_id, constants.Actions.set_intro_settings)]
+                [
+                    new_button(
+                        _("btn__back"), chat_id, constants.Actions.set_intro_settings
+                    )
+                ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
             update.message.reply_text(
-                constants.on_success_notify_response,
+                _("msg__sucess_set_notify_timeout_response"),
                 reply_markup=reply_markup,
             )
 
@@ -481,7 +504,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
             constants.Actions.set_on_introduce_message_update,
         ]:
             message = update.message.text_markdown
-            reply_message = constants.on_set_new_message
+            reply_message = _("msg__set_new_message")
             with session_scope() as sess:
                 if action == constants.Actions.set_on_new_chat_member_message_response:
                     chat = Chat(id=chat_id, on_new_chat_member_message=message)
@@ -501,11 +524,9 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                         whois_length = int(message)
                         assert whois_length >= 0
                         chat = Chat(id=chat_id, whois_length=whois_length)
-                        reply_message = constants.on_set_whois_length
+                        reply_message = _("msg__sucess_whois_length")
                     except:
-                        update.message.reply_text(
-                            constants.on_failed_set_whois_length_response
-                        )
+                        update.message.reply_text(_("msg__failed_whois_response"))
                         return
 
                 if action == constants.Actions.set_on_introduce_message_update:
@@ -514,7 +535,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                         not in update.message.parse_entities(types=["hashtag"]).values()
                     ):
                         update.message.reply_text(
-                            constants.need_hashtag_update_response
+                            _("msg__need_hashtag_update_response")
                         )
                         return
                     chat = Chat(id=chat_id, on_introduce_message_update=message)
@@ -527,13 +548,21 @@ def message_handler(update: Update, context: CallbackContext) -> None:
                 keyboard = [
                     [
                         new_button(
-                            "Назад", chat_id, constants.Actions.set_kick_bans_settings
+                            _("btn__back"),
+                            chat_id,
+                            constants.Actions.set_kick_bans_settings,
                         )
                     ]
                 ]
             else:
                 keyboard = [
-                    [new_button("Назад", chat_id, constants.Actions.set_intro_settings)]
+                    [
+                        new_button(
+                            _("btn__back"),
+                            chat_id,
+                            constants.Actions.set_intro_settings,
+                        )
+                    ]
                 ]
             context.user_data["action"] = None
 

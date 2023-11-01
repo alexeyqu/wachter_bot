@@ -1,22 +1,27 @@
 from telegram.ext import (
-    Updater,
     CommandHandler,
     Filters,
     MessageHandler,
+    PicklePersistence,
     CallbackQueryHandler,
     ChatMemberHandler,
 )
 from src.custom_filters import filter_bot_added
 from src.logging import tg_logger
 from src import handlers
+from src.job_persistence_updater import JobPersistenceUpdater
 import os
 
 
 def main():
-    updater = Updater(os.environ["TELEGRAM_TOKEN"])
+    updater = JobPersistenceUpdater(
+        os.environ["TELEGRAM_TOKEN"],
+        persistence=PicklePersistence(filename="persistent_storage.pickle", store_callback_data=True),
+    )
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("help", handlers.help_handler))
+    dp.add_handler(CommandHandler("listjobs", handlers.list_jobs_handler))
 
     # group UX
     dp.add_handler(

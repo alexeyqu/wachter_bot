@@ -1,9 +1,12 @@
 from telegram import InlineKeyboardMarkup, Update
 from telegram.ext import CallbackContext
 
-from src import constants
 
-from .utils import get_chats_list, create_chats_list_keyboard, admin
+from src.handlers.utils import admin
+from src.texts import _
+
+
+from .utils import get_chats_list, create_chats_list_keyboard
 
 
 @admin
@@ -26,7 +29,7 @@ def start_handler(update: Update, context: CallbackContext) -> None:
 
     # If the user does not have administrative privileges in any chat, inform them
     if len(user_chats) == 0:
-        update.message.reply_text("У вас нет доступных чатов.")
+        update.message.reply_text(_("msg__no_chats_available"))
         return
 
     # Create an inline keyboard with the list of available chats
@@ -35,4 +38,4 @@ def start_handler(update: Update, context: CallbackContext) -> None:
     )
 
     # Send a message to the user with the inline keyboard
-    update.message.reply_text(constants.on_start_command, reply_markup=reply_markup)
+    update.message.reply_text(_("msg__start_command"), reply_markup=reply_markup)
