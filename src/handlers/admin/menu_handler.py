@@ -499,7 +499,7 @@ def message_handler(update: Update, context: CallbackContext) -> None:
             constants.Actions.set_whois_length,
             constants.Actions.set_on_introduce_message_update,
         ]:
-            message = update.message.text_markdown.replace("%USER\_MENTION%", "%USER_MENTION%")
+            message = update.message.text_markdown
             reply_message = _("msg__set_new_message")
             with session_scope() as sess:
                 if action == constants.Actions.set_on_new_chat_member_message_response:

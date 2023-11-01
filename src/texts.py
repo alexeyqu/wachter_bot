@@ -22,9 +22,9 @@ _texts = {
     "msg__new_chat_member": "Добро пожаловать! Пожалуйста, представьтесь с использованием хэштега #whois и поздоровайтесь с сообществом.",
     "msg__known_new_chat_member": "Добро пожаловать снова!",
     "msg__introduce": "Спасибо и добро пожаловать!",
-    "msg__kick": "%USER_MENTION% не представился и покидает чат.",
-    "msg__notify": "%USER_MENTION%, пожалуйста, представьтесь с использованием хэштега #whois.",
-    "msg__introduce_update": "%USER_MENTION%, если вы хотите обновить существующий #whois, пожалуйста добавьте тег #update к сообщению.",
+    "msg__kick": "%USER\_MENTION% не представился и покидает чат.",
+    "msg__notify": "%USER\_MENTION%, пожалуйста, представьтесь с использованием хэштега #whois.",
+    "msg__introduce_update": "%USER\_MENTION%, если вы хотите обновить существующий #whois, пожалуйста добавьте тег #update к сообщению.",
     "msg__no_chats_available": "У вас нет доступных чатов.",
     "msg__sucess_whois_length": "Обновил необходимую длину #whois.",
     "msg__failed_whois_response": "Длина должна быть целым положительным числом.",
@@ -76,7 +76,7 @@ _texts = {
 ---
 Сообщение после удаления: `{on_kick_message}`
 """,
-    "msg__short_whois": "%USER_MENTION%, напишите про себя побольше, хотя бы {whois_length} символов. Спасибо!",
+    "msg__short_whois": "%USER\_MENTION%, напишите про себя побольше, хотя бы {whois_length} символов. Спасибо!",
     "msg__skip_new_chat_member": "%SKIP%",
 }
 
