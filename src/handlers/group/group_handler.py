@@ -27,7 +27,12 @@ def on_new_chat_members(update: Update, context: CallbackContext) -> None:
 
     for user_id in user_ids:
         for job in context.job_queue.jobs():
-            if job.context["user_id"] == user_id and job.context["chat_id"] == chat_id:
+            # user_id doesn't exist in some jobs, chat_id exist always
+            # TODO schematize this
+            if (
+                job.context.get("user_id") == user_id
+                and job.context["chat_id"] == chat_id
+            ):
                 job.schedule_removal()
 
         with session_scope() as sess:
@@ -146,9 +151,11 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
             user = User(chat_id=chat_id, user_id=user_id, whois=update.message.text)
             sess.merge(user)
 
-        removed = False
         for job in context.job_queue.jobs():
-            if job.context["user_id"] == user_id and job.context["chat_id"] == chat_id:
+            if (
+                job.context.get("user_id") == user_id
+                and job.context["chat_id"] == chat_id
+            ):
                 if "message_id" in job.context:
                     try:
                         context.bot.delete_message(
@@ -160,10 +167,8 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                             exc_info=e,
                         )
                 job.schedule_removal()
-                removed = True
 
-        if removed:
-            _send_message_with_deletion(context, chat_id, user_id, message)
+        _send_message_with_deletion(context, chat_id, user_id, message)
 
 
 def on_notify_timeout(context: CallbackContext):
