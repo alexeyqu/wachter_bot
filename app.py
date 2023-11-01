@@ -61,7 +61,9 @@ def main():
 
     updater.start_polling()
     tg_logger.info("Bot has started successfully")
+    tg_logger.info(os.environ.get("TEAM_TELEGRAM_IDS", "[]"))
     updater.idle()
+    
 
 
 if __name__ == "__main__":
