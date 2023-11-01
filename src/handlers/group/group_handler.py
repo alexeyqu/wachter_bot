@@ -49,7 +49,7 @@ def on_new_chat_members(update: Update, context: CallbackContext) -> None:
                 )
 
                 context.job_queue.run_once(
-                    _delete_message,
+                    delete_message,
                     constants.default_delete_message * 60,  # 1h
                     context={
                         "chat_id": chat_id,
@@ -138,7 +138,7 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 )
 
                 context.job_queue.run_once(
-                    _delete_message,
+                    delete_message,
                     constants.default_delete_message * 60,  # 1h
                     context={
                         "chat_id": chat_id,
@@ -169,7 +169,7 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 )
 
                 context.job_queue.run_once(
-                    _delete_message,
+                    delete_message,
                     constants.default_delete_message * 60,  # 1h
                     context={
                         "chat_id": chat_id,
@@ -205,7 +205,7 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
             )
 
             context.job_queue.run_once(
-                _delete_message,
+                delete_message,
                 constants.default_delete_message * 60,  # 1h
                 context={
                     "chat_id": chat_id,
@@ -238,7 +238,7 @@ def on_notify_timeout(context: CallbackContext):
         )
 
         job.context["job_queue"].run_once(
-            _delete_message,
+            delete_message,
             (chat.kick_timeout - chat.notify_timeout) * 60,
             context={
                 "chat_id": job.context["chat_id"],
@@ -298,7 +298,7 @@ def on_kick_timeout(context: CallbackContext) -> None:
                 )
 
                 context.job_queue.run_once(
-                    _delete_message,
+                    delete_message,
                     constants.default_delete_message * 60,  # 1h
                     context={
                         "chat_id": job.context["chat_id"],
@@ -313,7 +313,7 @@ def on_kick_timeout(context: CallbackContext) -> None:
         )
 
         context.job_queue.run_once(
-            _delete_message,
+            delete_message,
             constants.default_delete_message * 60,  # 1h
             context={
                 "chat_id": job.context["chat_id"],
@@ -323,7 +323,7 @@ def on_kick_timeout(context: CallbackContext) -> None:
         )
 
 
-def _delete_message(context: CallbackContext) -> None:
+def delete_message(context: CallbackContext) -> None:
     """
     Delete a message from a chat.
 
