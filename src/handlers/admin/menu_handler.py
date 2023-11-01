@@ -91,12 +91,16 @@ def _get_current_settings_helper(chat_id: int, settings: str, chat_name: str) ->
             return "Chat not found."
 
         if settings == constants.Actions.get_current_intro_settings:
-            return _("msg__get_intro_settings").format(
-                chat_name=chat_name, **chat.__dict__
+            return (
+                _("msg__get_intro_settings")
+                .format(chat_name=chat_name, **chat.__dict__)
+                .replace("%USER\\_MENTION%", "%USER_MENTION%")
             )
         else:
-            return _("msg__get_kick_settings").format(
-                chat_name=chat_name, **chat.__dict__
+            return (
+                _("msg__get_kick_settings")
+                .format(chat_name=chat_name, **chat.__dict__)
+                .replace("%USER\\_MENTION%", "%USER_MENTION%")
             )
 
 

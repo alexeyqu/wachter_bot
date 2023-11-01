@@ -55,26 +55,26 @@ _texts = {
     "msg__get_intro_settings": """
 Выбран чат {chat_name}.
 ---
-Сообщение для нового участника чата: `{on_new_chat_member_message.replace("%USER\\_MENTION%", "%USER_MENTION%")}`
+Сообщение для нового участника чата: `{on_new_chat_member_message}`
 ---
-Сообщение при перезаходе в чат: `{on_known_new_chat_member_message.replace("%USER\\_MENTION%", "%USER_MENTION%")}`
+Сообщение при перезаходе в чат: `{on_known_new_chat_member_message}`
 ---
-Сообщение после успешного представления: `{on_introduce_message.replace("%USER\\_MENTION%", "%USER_MENTION%")}`
+Сообщение после успешного представления: `{on_introduce_message}`
 ---
-Сообщение напоминания: `{notify_message.replace("%USER\\_MENTION%", "%USER_MENTION%")}`
+Сообщение напоминания: `{notify_message}`
 ---
 Необходимая длина представления с хэштегом #whois для новых пользователей: {whois_length}
 ---
 Время до напоминания в минутах (целое положительное число): {notify_timeout}
 ---
-Сообщение для обновления информации в #whois: `{on_introduce_message_update.replace("%USER\\_MENTION%", "%USER_MENTION%")}`
+Сообщение для обновления информации в #whois: `{on_introduce_message_update}`
 """,
     "msg__get_kick_settings": """
 Выбран чат {chat_name}.
 ---
 Время до удаления в минутах (целое положительное число): {kick_timeout}
 ---
-Сообщение после удаления: `{on_kick_message.replace("%USER\\_MENTION%", "%USER_MENTION%")}`
+Сообщение после удаления: `{on_kick_message}`
 """,
     "msg__short_whois": "%USER\_MENTION%, напишите про себя побольше, хотя бы {whois_length} символов. Спасибо!",
     "msg__skip_new_chat_member": "%SKIP%",
