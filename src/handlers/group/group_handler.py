@@ -136,6 +136,7 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 existing_user
                 and "#update"
                 not in update.message.parse_entities(types=["hashtag"]).values()
+                and existing_user.whois != ""
             ):
                 _send_message_with_deletion(
                     context, chat_id, user_id, _("msg__introduce_message_update")
