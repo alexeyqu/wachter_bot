@@ -67,7 +67,7 @@ def my_chat_member_handler(update: Update, context: CallbackContext):
                 )
                 context.bot.send_message(
                     update.effective_user.id,
-                    constants.on_make_admin_direct_message.format(
+                    _("msg__make_admin_direct").format(
                         chat_name=update.effective_chat.title
                     ),
                     reply_markup=reply_markup,
