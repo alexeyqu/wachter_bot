@@ -31,13 +31,13 @@ class Actions(IntEnum):
 
 
 RH_kick_messages = [
-    "Хакер %USER\_MENTION% молчит и покидает чат. ⚰",
-    "Хакера %USER\_MENTION% забрал роскомнадзор",
-    "Хакера %USER\_MENTION% забрал Интерпол",
-    "Хакер %USER\_MENTION% провалил дедлайн",
-    "Хакер %USER\_MENTION% не смог выйти из VIM",
-    "Хакер %USER\_MENTION% пошёл кормить рыбок",
-    "Хакер %USER\_MENTION% провалил испытание",
+    "Хакер %USER_MENTION% молчит и покидает чат. ⚰",
+    "Хакера %USER_MENTION% забрал роскомнадзор",
+    "Хакера %USER_MENTION% забрал Интерпол",
+    "Хакер %USER_MENTION% провалил дедлайн",
+    "Хакер %USER_MENTION% не смог выйти из VIM",
+    "Хакер %USER_MENTION% пошёл кормить рыбок",
+    "Хакер %USER_MENTION% провалил испытание",
 ]
 
 RH_CHAT_ID = -1001147286684

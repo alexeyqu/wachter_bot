@@ -364,4 +364,4 @@ def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: Message) ->
         user_mention_markdown = user.mention_markdown()
 
     # \ нужен из-за формата сообщений в маркдауне
-    return message.replace("%USER\_MENTION%", user_mention_markdown)
+    return message.replace("%USER_MENTION%", user_mention_markdown)
