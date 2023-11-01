@@ -44,19 +44,7 @@ def on_new_chat_members(update: Update, context: CallbackContext) -> None:
                 sess.commit()
 
             if user is not None:
-                message = update.message.reply_text(
-                    chat.on_known_new_chat_member_message
-                )
-
-                context.job_queue.run_once(
-                    delete_message,
-                    constants.default_delete_message * 60,  # 1h
-                    context={
-                        "chat_id": chat_id,
-                        "user_id": user_id,
-                        "message_id": message.message_id,
-                    },
-                )
+                send_message_with_deletion(context, chat_id, user_id, chat.on_known_new_chat_member_message, constants.default_delete_message)
                 continue
 
             message = chat.on_new_chat_member_message
@@ -126,26 +114,7 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 sess.commit()
 
             if len(update.message.text) <= chat.whois_length:
-                message_markdown = _mention_markdown(
-                    # TODO move to chat DB
-                    context.bot,
-                    chat_id,
-                    user_id,
-                    _("msg__short_whois").format(whois_length=chat.whois_length),
-                )
-                message = update.message.reply_text(
-                    message_markdown, parse_mode=ParseMode.MARKDOWN
-                )
-
-                context.job_queue.run_once(
-                    delete_message,
-                    constants.default_delete_message * 60,  # 1h
-                    context={
-                        "chat_id": chat_id,
-                        "user_id": user_id,
-                        "message_id": message.message_id,
-                    },
-                )
+                send_message_with_deletion(context, chat_id, user_id, _("msg__short_whois").format(whois_length=chat.whois_length), constants.default_delete_message)
                 return
 
             message = chat.on_introduce_message
@@ -161,22 +130,7 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 and "#update"
                 not in update.message.parse_entities(types=["hashtag"]).values()
             ):
-                message_markdown = _mention_markdown(
-                    context.bot, chat_id, user_id, _("msg__introduce_message_update")
-                )
-                message = update.message.reply_text(
-                    message_markdown, parse_mode=ParseMode.MARKDOWN
-                )
-
-                context.job_queue.run_once(
-                    delete_message,
-                    constants.default_delete_message * 60,  # 1h
-                    context={
-                        "chat_id": chat_id,
-                        "user_id": user_id,
-                        "message_id": message.message_id,
-                    },
-                )
+                send_message_with_deletion(context, chat_id, user_id, _("msg__introduce_message_update"), constants.default_delete_message)
                 return
 
             user = User(chat_id=chat_id, user_id=user_id, whois=update.message.text)
@@ -199,20 +153,8 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 removed = True
 
         if removed:
-            message_markdown = _mention_markdown(context.bot, chat_id, user_id, message)
-            message = update.message.reply_text(
-                message_markdown, parse_mode=ParseMode.MARKDOWN
-            )
+            send_message_with_deletion(context, chat_id, user_id, message)
 
-            context.job_queue.run_once(
-                delete_message,
-                constants.default_delete_message * 60,  # 1h
-                context={
-                    "chat_id": chat_id,
-                    "user_id": user_id,
-                    "message_id": message.message_id,
-                },
-            )
 
 
 def on_notify_timeout(context: CallbackContext):
@@ -225,27 +167,10 @@ def on_notify_timeout(context: CallbackContext):
     Returns:
     None
     """
-    bot, job = context.bot, context.job
+    job = context.job
     with session_scope() as sess:
         chat = sess.query(Chat).filter(Chat.id == job.context["chat_id"]).first()
-
-        message_markdown = _mention_markdown(
-            bot, job.context["chat_id"], job.context["user_id"], chat.notify_message
-        )
-
-        message = bot.send_message(
-            job.context["chat_id"], text=message_markdown, parse_mode=ParseMode.MARKDOWN
-        )
-
-        job.context["job_queue"].run_once(
-            delete_message,
-            (chat.kick_timeout - chat.notify_timeout) * 60,
-            context={
-                "chat_id": job.context["chat_id"],
-                "user_id": job.context["user_id"],
-                "message_id": message.message_id,
-            },
-        )
+        send_message_with_deletion(context, job.context["chat_id"], job.context["user_id"], chat.notify_message, chat.kick_timeout - chat.notify_timeout)
 
 
 def on_kick_timeout(context: CallbackContext) -> None:
@@ -276,44 +201,11 @@ def on_kick_timeout(context: CallbackContext) -> None:
 
         with session_scope() as sess:
             chat = sess.query(Chat).filter(Chat.id == job.context["chat_id"]).first()
-
             if chat.on_kick_message.lower() not in ["false", "0"]:
-                message_markdown = _mention_markdown(
-                    bot,
-                    job.context["chat_id"],
-                    job.context["user_id"],
-                    chat.on_kick_message,
-                )
-                message = bot.send_message(
-                    job.context["chat_id"],
-                    text=message_markdown,
-                    parse_mode=ParseMode.MARKDOWN,
-                )
-
-                context.job_queue.run_once(
-                    delete_message,
-                    constants.default_delete_message * 60,  # 1h
-                    context={
-                        "chat_id": job.context["chat_id"],
-                        "user_id": job.context["user_id"],
-                        "message_id": message.message_id,
-                    },
-                )
+                send_message_with_deletion(context, job.context["chat_id"], job.context["user_id"], chat.on_kick_message)
     except Exception as e:
         tg_logger.exception(e)
-        message = bot.send_message(
-            job.context["chat_id"], text=_("msg__failed_kick_response")
-        )
-
-        context.job_queue.run_once(
-            delete_message,
-            constants.default_delete_message * 60,  # 1h
-            context={
-                "chat_id": job.context["chat_id"],
-                "user_id": job.context["user_id"],
-                "message_id": message.message_id,
-            },
-        )
+        send_message_with_deletion(context, job.context["chat_id"], job.context["user_id"], _("msg__failed_kick_response"))
 
 
 def delete_message(context: CallbackContext) -> None:
@@ -358,3 +250,22 @@ def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: Message) ->
 
     # \ нужен из-за формата сообщений в маркдауне
     return message.replace("%USER\_MENTION%", user_mention_markdown)
+
+def send_message_with_deletion(context: CallbackContext, chat_id: int, user_id: int, message: str, timeout_m: int=constants.default_delete_message):
+    message_markdown = _mention_markdown(
+            context.bot, chat_id, user_id, message
+        )
+
+    message = context.bot.send_message(
+        chat_id, text=message_markdown, parse_mode=ParseMode.MARKDOWN
+    )
+
+    context.job_queue.run_once(
+        delete_message,
+        timeout_m * 60,
+        context={
+            "chat_id": chat_id,
+            "user_id": user_id,
+            "message_id": message.message_id,
+        },
+    )
