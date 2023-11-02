@@ -144,7 +144,10 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
                 and existing_user.whois != ""
             ):
                 _send_message_with_deletion(
-                    context, chat_id, user_id, _("msg__introduce_message_update")
+                    context,
+                    chat_id,
+                    user_id,
+                    chat.on_introduce_message_update,
                 )
                 return
 
