@@ -131,7 +131,6 @@ def on_hashtag_message(update: Update, context: CallbackContext) -> None:
 
             message = chat.on_introduce_message
 
-        with session_scope() as sess:
             existing_user = (
                 sess.query(User)
                 .filter(User.chat_id == chat_id, User.user_id == user_id)
