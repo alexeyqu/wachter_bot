@@ -4,14 +4,19 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"psycopg2-binary" = "*"
-python-telegram-bot = {version = "~=13.11"}
 sqlalchemy = "*"
 alembic = "*"
 pre-commit = "*"
 pylint = "*"
 black = "*"
 pyTelegramLogger = "*"
+pytest = "*"
+pytest-mock = "*"
+httpcore = {extras = ["asyncio"], version = "*"}
+asyncio = "*"
+asyncpg = "*"
+python-telegram-bot = {extras = ["job-queue"], version = "*"}
+pytest-asyncio = "*"
 
 [dev-packages]
 "autopep8" = "*"

@@ -42,7 +42,7 @@ _texts = {
     "btn__change_whois_message": "Изменить сообщение для обновления #whois",
     "btn__back": "Назад",
     "btn__change_kick_timeout": "Изменить время до удаления",
-    "btn__change_kick_messge": "Изменить сообщение после удаления",
+    "btn__change_kick_message": "Изменить сообщение после удаления",
     "msg__set_new_welcome_message": "Отправьте новый текст сообщения при входе в чат. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
     "msg__set_new_kick_timout": "Отправьте новое время до удаления в минутах",
     "msg__set_new_rewelcome_message": "Отправьте новый текст сообщения при перезаходе в чат. Используйте `%USER_MENTION%`, чтобы тегнуть адресата.",
