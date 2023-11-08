@@ -1,8 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy import Column, Integer, Text, Boolean, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm.session import sessionmaker
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 import os
 
 Base = declarative_base()
@@ -68,24 +69,26 @@ class User(Base):
 
 
 def get_uri():
-    return os.environ.get("DATABASE_URL", "postgresql://localhost:5432/wachter")
+    return os.environ.get(
+        "DATABASE_URL", "postgresql+asyncpg://user:password@wachter-db/db"
+    )
 
 
-engine = create_engine(get_uri(), echo=False)
-Session = sessionmaker(autoflush=True, bind=engine)
+engine = create_async_engine(get_uri(), echo=False)
+AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
-@contextmanager
-def session_scope():
-    session = Session()
-    try:
-        yield session
-        session.commit()
-    except:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+@asynccontextmanager
+async def session_scope():
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+            await session.commit()
+        except:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
 
 
 def orm_to_dict(obj):
