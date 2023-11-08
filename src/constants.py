@@ -2,11 +2,10 @@ from enum import IntEnum, auto
 import json, os
 
 
-default_kick_timeout = 1440  # 24h in minutes
-default_notify_timeout = 1380  # 23h in minutes
-notify_delta = 10
+default_kick_timeout_m = 1440  # 24h in minutes
+default_notify_timeout_m = 1380  # 23h in minutes
+default_delete_message_timeout_m = 60  # 1h in minutes
 default_whois_length = 60
-default_delete_message = 60
 
 
 # ACTIONS
@@ -30,17 +29,5 @@ class Actions(IntEnum):
     set_on_introduce_message_update = auto()
 
 
-RH_kick_messages = [
-    "Хакер %USER_MENTION% молчит и покидает чат. ⚰",
-    "Хакера %USER_MENTION% забрал роскомнадзор",
-    "Хакера %USER_MENTION% забрал Интерпол",
-    "Хакер %USER_MENTION% провалил дедлайн",
-    "Хакер %USER_MENTION% не смог выйти из VIM",
-    "Хакер %USER_MENTION% пошёл кормить рыбок",
-    "Хакер %USER_MENTION% провалил испытание",
-]
-
-RH_CHAT_ID = -1001147286684
-
-DEBUG = os.environ.get("DEBUG", True)
+DEBUG = os.environ.get("DEBUG", 'True') in ['True']
 TEAM_TELEGRAM_IDS = json.loads(os.environ.get("TEAM_TELEGRAM_IDS", "[]"))
