@@ -46,8 +46,8 @@ def main():
     )
     application.add_error_handler(handlers.error_handler)
 
-    application.run_polling()
     tg_logger.info("Bot has started successfully")
+    application.run_polling()
 
 
 if __name__ == "__main__":
