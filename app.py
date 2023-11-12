@@ -5,6 +5,7 @@ from telegram.ext import (
     MessageHandler,
     CallbackQueryHandler,
     ChatMemberHandler,
+    PicklePersistence,
 )
 from src.custom_filters import filter_bot_added
 from src.logging import tg_logger
@@ -13,7 +14,12 @@ import os
 
 
 def main():
-    application = ApplicationBuilder().token(os.environ["TELEGRAM_TOKEN"]).build()
+    application = (
+        ApplicationBuilder()
+        .persistence(PicklePersistence(filepath="persistent_storage.pickle"))
+        .token(os.environ["TELEGRAM_TOKEN"])
+        .build()
+    )
 
     application.add_handler(CommandHandler("help", handlers.help_handler))
     application.add_handler(CommandHandler("listjobs", handlers.list_jobs_handler))
