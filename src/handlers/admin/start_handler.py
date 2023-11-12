@@ -34,7 +34,7 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     # Create an inline keyboard with the list of available chats
     reply_markup = InlineKeyboardMarkup(
-        create_chats_list_keyboard(user_chats, context, user_id)
+        await create_chats_list_keyboard(user_chats, context, user_id)
     )
 
     # Send a message to the user with the inline keyboard

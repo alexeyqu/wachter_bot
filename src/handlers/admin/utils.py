@@ -108,7 +108,7 @@ async def get_chats_list(
     return chats_list
 
 
-def create_chats_list_keyboard(
+async def create_chats_list_keyboard(
     user_chats: Iterator[Dict[str, int]], context: CallbackContext, user_id: int
 ) -> List[List[InlineKeyboardButton]]:
     """
@@ -125,5 +125,5 @@ def create_chats_list_keyboard(
     return [
         [new_button(chat["title"], chat["id"], constants.Actions.select_chat)]
         for chat in user_chats
-        if authorize_user(context.bot, chat["id"], user_id)
+        if await authorize_user(context.bot, chat["id"], user_id)
     ]

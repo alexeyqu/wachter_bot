@@ -131,7 +131,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             await update.message.reply_text(_("msg__no_chats_available"))
             return
         reply_markup = InlineKeyboardMarkup(
-            create_chats_list_keyboard(user_chats, context, user_id)
+            await create_chats_list_keyboard(user_chats, context, user_id)
         )
         await context.bot.edit_message_text(
             _("msg__start_command"),
@@ -259,7 +259,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         user_id = query.message.chat_id
         user_chats = await get_chats_list(user_id, context)
         reply_markup = InlineKeyboardMarkup(
-            create_chats_list_keyboard(user_chats, context, user_id)
+            await create_chats_list_keyboard(user_chats, context, user_id)
         )
         await context.bot.edit_message_text(
             _("msg__start_command"),
