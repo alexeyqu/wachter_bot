@@ -64,6 +64,19 @@ def on_new_chat_members(update: Update, context: CallbackContext) -> None:
         message_markdown = _mention_markdown(context.bot, chat_id, user_id, message)
         msg = update.message.reply_text(message_markdown, parse_mode=ParseMode.MARKDOWN)
 
+        # hack to delete welcome message even if kick_timeout is 0
+        context.job_queue.run_once(
+            delete_message,
+            # 1 week which is considered infinity
+            constants.default_delete_message_timeout_m * 24 * 7 * 60,
+            context={
+                "chat_id": chat_id,
+                "user_id": user_id,
+                # so that the #whois message will delete this one
+                "message_id": msg.message_id,
+            },
+        )
+
         if kick_timeout != 0:
             job = context.job_queue.run_once(
                 on_kick_timeout,
@@ -71,7 +84,6 @@ def on_new_chat_members(update: Update, context: CallbackContext) -> None:
                 context={
                     "chat_id": chat_id,
                     "user_id": user_id,
-                    "message_id": msg.message_id,
                     "creation_time": datetime.now().timestamp(),
                 },
             )
@@ -206,13 +218,6 @@ def on_kick_timeout(context: CallbackContext) -> None:
     None
     """
     bot, job = context.bot, context.job
-    try:
-        bot.delete_message(job.context["chat_id"], job.context["message_id"])
-    except Exception as e:
-        tg_logger.warning(
-            f"can't delete {job.context['message_id']} from {job.context['chat_id']}",
-            exc_info=e,
-        )
 
     try:
         bot.kick_chat_member(
