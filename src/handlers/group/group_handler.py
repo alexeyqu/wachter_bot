@@ -121,9 +121,9 @@ async def on_hashtag_message(
         update.message = update.edited_message
 
     chat_id = update.message.chat_id
-
+    parsed_entities = await update.message.parse_entities(types=["hashtag"])
     if (
-        "#whois" in await update.message.parse_entities(types=["hashtag"]).values()
+        "#whois" in parsed_entities.values()
         and chat_id < 0
     ):
         user_id = update.message.from_user.id
