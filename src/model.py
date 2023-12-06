@@ -69,6 +69,10 @@ class User(Base):
 
 
 def get_uri():
+    if os.environ.get("TESTING") == "true":
+        return os.environ.get(
+            "DATABASE_URL", "sqlite+aiosqlite:///:memory:?cache=shared"
+        )
     return os.environ.get(
         "DATABASE_URL", "postgresql+asyncpg://user:password@wachter-db/db"
     )

@@ -17,6 +17,7 @@ asyncio = "*"
 asyncpg = "*"
 python-telegram-bot = {extras = ["job-queue"], version = "*"}
 pytest-asyncio = "*"
+aiosqlite = "*"
 
 [dev-packages]
 "autopep8" = "*"
