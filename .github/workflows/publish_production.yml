@@ -63,6 +63,7 @@ jobs:
           ROOT_DIR: /home/${{ secrets.DO_USER }}/${{ env.PACKAGE_LABEL }}
           POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           TELEGRAM_ERROR_CHAT_ID: ${{ secrets.TELEGRAM_ERROR_CHAT_ID }}
           TEAM_TELEGRAM_IDS: ${{ secrets.TEAM_TELEGRAM_IDS }}
         with:
@@ -71,7 +72,7 @@ jobs:
           passphrase: ${{ secrets.DO_SSH_KEY_PASSWORD }}
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT }}
-          envs: GITHUB_USERNAME, GITHUB_TOKEN, ROOT_DIR, POSTGRES_URL, TELEGRAM_TOKEN, TEAM_TELEGRAM_IDS
+          envs: GITHUB_USERNAME, GITHUB_TOKEN, ROOT_DIR, POSTGRES_URL, TELEGRAM_TOKEN, SENTRY_DSN, TEAM_TELEGRAM_IDS
           script: |
             export CR_PAT=${{ secrets.GH_PAT_READ_PACKAGE }}
             echo $CR_PAT | docker login  ghcr.io -u $GITHUB_USERNAME
@@ -80,6 +81,7 @@ jobs:
             touch jobs.json
             echo POSTGRES_URL=${{ env.POSTGRES_URL }} >> .env
             echo TELEGRAM_TOKEN=${{ env.TELEGRAM_TOKEN }} >> .env
+            echo SENTRY_DSN=${{ env.SENTRY_DSN }} >> .env
             echo TELEGRAM_ERROR_CHAT_ID=${{ env.TELEGRAM_ERROR_CHAT_ID }} >> .env
             echo DEBUG=False >> .env
             echo TEAM_TELEGRAM_IDS=${{ env.TEAM_TELEGRAM_IDS }} >> .env

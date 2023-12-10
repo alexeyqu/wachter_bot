@@ -12,6 +12,7 @@ pre-commit = "*"
 pylint = "*"
 black = "*"
 pyTelegramLogger = "*"
+sentry-sdk = "*"
 
 [dev-packages]
 "autopep8" = "*"

@@ -6,12 +6,19 @@ from telegram.ext import (
     CallbackQueryHandler,
     ChatMemberHandler,
 )
+import sentry_sdk
 from src.custom_filters import filter_bot_added
 from src.logging import tg_logger
 from src import handlers
 from src.job_persistence_updater import JobPersistenceUpdater
 import os
 
+if "SENTRY_DSN" in os.environ:
+    sentry_sdk.init(
+        dsn=os.environ["SENTRY_DSN"],
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0,
+    )
 
 def main():
     updater = JobPersistenceUpdater(
