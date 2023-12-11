@@ -7,8 +7,10 @@ from telegram.ext import (
     ChatMemberHandler,
     PicklePersistence,
 )
+from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
 from src.custom_filters import filter_bot_added
 from src.logging import tg_logger
+from src.model import get_uri
 from src import handlers
 import os
 
@@ -19,6 +21,12 @@ def main():
         .persistence(PicklePersistence(filepath="persistent_storage.pickle"))
         .token(os.environ["TELEGRAM_TOKEN"])
         .build()
+    )
+    application.job_queue.scheduler.add_jobstore(
+        PTBSQLAlchemyJobStore(
+            application=application,
+            url=os.environ["PERSISTENCE_DATABASE_URL"],
+        )
     )
 
     application.add_handler(CommandHandler("help", handlers.help_handler))
