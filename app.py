@@ -67,7 +67,12 @@ def main():
     dp.add_error_handler(handlers.error_handler)
 
     updater.start_polling()
+    if "SENTRY_DSN" in os.environ:
+        tg_logger.info("Sentry OK")
+    else:
+        tg_logger.info("Sentry not OK")
     tg_logger.info("Bot has started successfully")
+    sentry_sdk.capture_message("Bot has started successfully")
     updater.idle()
 
 
