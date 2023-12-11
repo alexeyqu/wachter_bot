@@ -16,6 +16,8 @@ httpcore = {extras = ["asyncio"], version = "*"}
 asyncio = "*"
 asyncpg = "*"
 python-telegram-bot = {extras = ["job-queue"], version = "*"}
+ptbcontrib = {extras = ["ptb_jobstores_sqlalchemy"], git = "git+https://github.com/python-telegram-bot/ptbcontrib.git@main"}
+"psycopg2-binary" = "*"  # need for ptb_jobstores_sqlalchemy
 pytest-asyncio = "*"
 aiosqlite = "*"
 
