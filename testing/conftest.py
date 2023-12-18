@@ -1,7 +1,7 @@
 import sys
 import os
 import pytest, pytest_asyncio, asyncio, json
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -33,14 +33,24 @@ def mock_context():
     context = AsyncMock()
     bot_mock = AsyncMock()
     bot_mock.edit_message_text = AsyncMock()
+    context.job_queue.run_once = MagicMock()
     context.bot = bot_mock
     return context
+
+
+@pytest.fixture(scope="function", autouse=True)
+def mock_get_uri():
+    with patch("src.model.get_uri") as mock_get_uri:
+        mock_get_uri.return_value = "sqlite+aiosqlite:///:memory:?cache=shared"
+        yield
 
 
 # Fixture to set up an in-memory SQLite database
 @pytest_asyncio.fixture(scope="function")
 async def async_engine():
     async with engine.begin() as conn:
+        await conn.execute(text("DROP TABLE IF EXISTS users;"))
+        await conn.execute(text("DROP TABLE IF EXISTS chats;"))
         await conn.execute(
             text(
                 """
@@ -115,6 +125,20 @@ async def populate_db(async_session):
         ),
         (
             2,
+            "Welcome to Chat 2",
+            "Message for known members in Chat 2",
+            "Introduce in Chat 2",
+            "Kick message in Chat 2",
+            "Notify message in Chat 2",
+            None,
+            False,
+            30,
+            60,
+            100,
+            "Update Introduce in Chat 2",
+        ),
+        (
+            -3,
             "Welcome to Chat 2",
             "Message for known members in Chat 2",
             "Introduce in Chat 2",
