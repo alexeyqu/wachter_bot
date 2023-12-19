@@ -13,6 +13,9 @@ pylint = "*"
 black = "*"
 pyTelegramLogger = "*"
 sentry-sdk = "*"
+grpcio = "*"
+opentelemetry-sdk = "*"
+opentelemetry-exporter-otlp = "*"
 
 [dev-packages]
 "autopep8" = "*"
