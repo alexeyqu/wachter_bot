@@ -40,7 +40,7 @@ log_config = {
             "class": "opentelemetry.sdk._logs.LoggingHandler",
             "level": logging.INFO,
             "logger_provider": logger_provider,
-        }
+        },
     },
     "loggers": {
         "wachter_telegram_logger": {

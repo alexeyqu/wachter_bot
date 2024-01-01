@@ -236,7 +236,10 @@ def on_kick_timeout(context: CallbackContext) -> None:
                     chat.on_kick_message,
                 )
     except Exception as e:
-        tg_logger.exception(e)
+        tg_logger.exception(
+            f"Failed to kick {job.context['user_id']} from {job.context['chat_id']}",
+            exc_info=e,
+        )
         _send_message_with_deletion(
             context,
             job.context["chat_id"],
