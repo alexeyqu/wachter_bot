@@ -23,7 +23,7 @@ async def my_chat_member_handler(update: Update, context: ContextTypes.DEFAULT_T
         old_status != ChatMember.ADMINISTRATOR
         and new_status == ChatMember.ADMINISTRATOR
     ):
-        # which means the bot is not admin and can be used
+        # which means the bot is now admin and can be used
         async with session_scope() as sess:
             result = await sess.execute(
                 select(Chat).filter_by(id=update.effective_chat.id)
