@@ -6,8 +6,14 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from src import constants
-from src.model import engine, User, Chat
+with pytest.MonkeyPatch().context() as ctx:
+
+    def mock_get_uri():
+        return "sqlite+aiosqlite:///:memory:?cache=shared"
+
+    ctx.setattr("src.constants.get_uri", mock_get_uri)
+    from src import constants
+    from src.model import engine, User, Chat
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
@@ -36,13 +42,6 @@ def mock_context():
     context.job_queue.run_once = MagicMock()
     context.bot = bot_mock
     return context
-
-
-@pytest.fixture(scope="function", autouse=True)
-def mock_get_uri():
-    with patch("src.model.get_uri") as mock_get_uri:
-        mock_get_uri.return_value = "sqlite+aiosqlite:///:memory:?cache=shared"
-        yield
 
 
 # Fixture to set up an in-memory SQLite database

@@ -4,7 +4,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm.session import sessionmaker
 from contextlib import asynccontextmanager
-import os
+
+from src.constants import get_uri
 
 Base = declarative_base()
 
@@ -66,16 +67,6 @@ class User(Base):
     chat_id = Column(BigInteger, primary_key=True)
 
     whois = Column(Text, nullable=False)
-
-
-def get_uri():
-    if os.environ.get("TESTING") == "true":
-        return os.environ.get(
-            "DATABASE_URL", "sqlite+aiosqlite:///:memory:?cache=shared"
-        )
-    return os.environ.get(
-        "DATABASE_URL", "postgresql+asyncpg://user:password@wachter-db/db"
-    )
 
 
 engine = create_async_engine(get_uri(), echo=False)

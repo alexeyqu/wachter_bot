@@ -31,3 +31,9 @@ class Actions(IntEnum):
 
 DEBUG = os.environ.get("DEBUG", "True") in ["True"]
 TEAM_TELEGRAM_IDS = json.loads(os.environ.get("TEAM_TELEGRAM_IDS", "[]"))
+
+
+def get_uri():
+    return os.environ.get(
+        "DATABASE_URL", "postgresql+asyncpg://user:password@wachter-db/db"
+    )

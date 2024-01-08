@@ -10,7 +10,6 @@ from telegram.ext import (
 from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
 from src.custom_filters import filter_bot_added
 from src.logging import tg_logger
-from src.model import get_uri
 from src import handlers
 import os
 

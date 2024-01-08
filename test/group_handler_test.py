@@ -11,7 +11,7 @@ from telegram.constants import ParseMode
 
 @pytest.mark.asyncio
 async def test_on_hashtag_message_new_user(
-    mock_get_uri, mock_update, mock_context, async_session, populate_db, mocker
+    mock_update, mock_context, async_session, populate_db, mocker
 ):
     # Simulate the Incoming Message
     chat_id = -3  # Example group chat ID (negative for groups)
@@ -50,7 +50,7 @@ async def test_on_hashtag_message_new_user(
 
 @pytest.mark.asyncio
 async def test_on_hashtag_message_short_whois(
-    mock_get_uri, mock_update, mock_context, async_session, populate_db, mocker
+    mock_update, mock_context, async_session, populate_db, mocker
 ):
     # Simulate the Incoming Message
     chat_id = -3  # Example group chat ID (negative for groups)
