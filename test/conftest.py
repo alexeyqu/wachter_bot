@@ -1,6 +1,6 @@
 import sys
 import os
-import pytest, pytest_asyncio, asyncio, json
+import pytest, pytest_asyncio, json
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
