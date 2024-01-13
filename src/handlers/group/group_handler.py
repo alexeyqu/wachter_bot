@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import random
 from telegram import Bot, Message, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
@@ -55,7 +54,7 @@ async def on_new_chat_members(
 
                 context.job_queue.run_once(
                     delete_message,
-                    constants.default_delete_message * 60,  # 1h
+                    constants.default_delete_message_timeout_m,  # 1h
                     chat_id=chat_id,
                     user_id=user_id,
                     data={
@@ -103,6 +102,43 @@ async def on_new_chat_members(
             )
 
 
+def is_whois(update, chat_id):
+    return (
+        "#whois" in update.message.parse_entities(types=["hashtag"]).values()
+        and chat_id < 0
+    )
+
+
+async def remove_user_jobs_from_queue(context, user_id, chat_id):
+    """
+    Remove jobs related to a specific user from the job queue.
+
+    Args:
+    context (CallbackContext): The context object containing the job queue and bot instance.
+    user_id (int): The user ID for whom the jobs should be removed.
+    chat_id (int): The chat ID associated with the jobs to be removed.
+
+    Returns:
+    bool: True if at least one job was removed, False otherwise.
+    """
+    removed = False
+    for job in context.job_queue.jobs():
+        if job.user_id == user_id and job.chat_id == chat_id:
+            if "message_id" in job.data:
+                try:
+                    await context.bot.delete_message(
+                        job.chat_id, job.data["message_id"]
+                    )
+                except Exception as e:
+                    tg_logger.warning(
+                        f"can't delete {job.data['message_id']} from {job.chat_id}",
+                        exc_info=e,
+                    )
+            job.schedule_removal()
+            removed = True
+    return removed
+
+
 async def on_hashtag_message(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
@@ -121,8 +157,8 @@ async def on_hashtag_message(
         update.message = update.edited_message
 
     chat_id = update.message.chat_id
-    parsed_entities = await update.message.parse_entities(types=["hashtag"])
-    if "#whois" in parsed_entities.values() and chat_id < 0:
+
+    if is_whois(update, chat_id):
         user_id = update.message.from_user.id
 
         async with session_scope() as sess:
@@ -147,7 +183,7 @@ async def on_hashtag_message(
 
                 context.job_queue.run_once(
                     delete_message,
-                    constants.default_delete_message * 60,  # 1h
+                    constants.default_delete_message_timeout_m,  # 1h
                     chat_id=chat_id,
                     user_id=user_id,
                     data={
@@ -177,7 +213,7 @@ async def on_hashtag_message(
 
                 context.job_queue.run_once(
                     delete_message,
-                    constants.default_delete_message * 60,  # 1h
+                    constants.default_delete_message_timeout_m,  # 1h
                     chat_id=chat_id,
                     user_id=user_id,
                     data={
@@ -185,25 +221,11 @@ async def on_hashtag_message(
                     },
                 )
                 return
-
             user = User(chat_id=chat_id, user_id=user_id, whois=update.message.text)
             await sess.merge(user)
 
         removed = False
-        for job in context.job_queue.jobs():
-            if job.user_id == user_id and job.chat_id == chat_id:
-                if "message_id" in job.data:
-                    try:
-                        await context.bot.delete_message(
-                            job.chat_id, job.data["message_id"]
-                        )
-                    except Exception as e:
-                        tg_logger.warning(
-                            f"can't delete {job.data['message_id']} from {job.chat_id}",
-                            exc_info=e,
-                        )
-                job.schedule_removal()
-                removed = True
+        removed = remove_user_jobs_from_queue(context, user_id, chat_id)
 
         if removed:
             message_markdown = await _mention_markdown(
@@ -215,7 +237,7 @@ async def on_hashtag_message(
 
             context.job_queue.run_once(
                 delete_message,
-                constants.default_delete_message * 60,  # 1h
+                constants.default_delete_message_timeout_m,  # 1h
                 data={
                     "chat_id": chat_id,
                     "user_id": user_id,

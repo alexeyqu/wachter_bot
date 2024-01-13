@@ -9,6 +9,11 @@ from src.texts import _
 from telegram.constants import ParseMode
 
 
+async def mock_mention_markdown(bot, chat_id, user_id, message):
+    # Replace %USER_MENTION% with a default string
+    return message.replace("%USER_MENTION%", "@example_user")
+
+
 @pytest.mark.asyncio
 async def test_on_hashtag_message_new_user(
     mock_update, mock_context, async_session, populate_db, mocker
@@ -62,7 +67,7 @@ async def test_on_hashtag_message_short_whois(
     mocker.patch("src.handlers.group.group_handler.is_whois", return_value=True)
     mocker.patch(
         "src.handlers.group.group_handler._mention_markdown",
-        return_value=_("msg__short_whois"),
+        side_effect=mock_mention_markdown,
     )
 
     await on_hashtag_message(mock_update, mock_context)
@@ -73,6 +78,7 @@ async def test_on_hashtag_message_short_whois(
                 select(Chat.whois_length).where(Chat.id == chat_id)
             )
             whois_length = result.scalar_one()
+            # print(whois_length)
         except Exception as e:
             print(f"Error during query execution: {e}")
             raise
