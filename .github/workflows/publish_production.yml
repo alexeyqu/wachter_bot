@@ -64,7 +64,6 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           PERSISTENCE_DATABASE_URL: ${{ secrets.PERSISTENCE_DATABASE_URL }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           UPTRACE_DSN: ${{ secrets.UPTRACE_DSN }}
           TELEGRAM_ERROR_CHAT_ID: ${{ secrets.TELEGRAM_ERROR_CHAT_ID }}
           TEAM_TELEGRAM_IDS: ${{ secrets.TEAM_TELEGRAM_IDS }}
