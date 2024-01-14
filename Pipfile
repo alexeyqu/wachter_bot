@@ -20,6 +20,9 @@ ptbcontrib = {extras = ["ptb_jobstores_sqlalchemy"], git = "git+https://github.c
 "psycopg2-binary" = "*"  # need for ptb_jobstores_sqlalchemy
 pytest-asyncio = "*"
 aiosqlite = "*"
+grpcio = "*"
+opentelemetry-sdk = "*"
+opentelemetry-exporter-otlp = "*"
 
 [dev-packages]
 "autopep8" = "*"
