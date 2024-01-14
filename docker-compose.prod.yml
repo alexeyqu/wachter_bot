@@ -16,6 +16,7 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - PERSISTENCE_DATABASE_URL=${PERSISTENCE_DATABASE_URL}
       - DEBUG=${DEBUG}
+      - DEPLOYMENT_ENVIRONMENT=production
       - TEAM_TELEGRAM_IDS=${TEAM_TELEGRAM_IDS}
     restart: unless-stopped
 
