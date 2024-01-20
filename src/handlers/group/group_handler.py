@@ -274,7 +274,7 @@ async def on_kick_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
             f"Failed to kick {job.context['user_id']} from {job.context['chat_id']}",
             exc_info=e,
         )
-        _send_message_with_deletion(
+        await _send_message_with_deletion(
             context,
             job.context["chat_id"],
             job.context["user_id"],
@@ -340,7 +340,7 @@ async def _send_message_with_deletion(
     message_markdown = _mention_markdown(context.bot, chat_id, user_id, message)
 
     if reply_to is not None:
-        sent_message = await message.reply_text(
+        sent_message = await reply_to.reply_text(
             text=message_markdown, parse_mode=ParseMode.MARKDOWN
         )
     else:
