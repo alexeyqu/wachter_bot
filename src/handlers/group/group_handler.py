@@ -184,15 +184,17 @@ async def on_hashtag_message(
                 select(User).where(User.chat_id == chat_id, User.user_id == user_id)
             )
             existing_user = result.scalars().first()
+            entities = update.message.parse_entities(types=["HASHTAG"])
             if (
                 existing_user
                 and "#update"
-                not in await update.message.parse_entities(types=["hashtag"]).values()
+                not in entities.values()
             ):
                 await _send_message_with_deletion(
                     context,
                     chat_id,
                     user_id,
+                    message,
                     timeout_m=chat.on_introduce_message_update,
                     reply_to=update.message,
                 )
@@ -337,7 +339,7 @@ async def _send_message_with_deletion(
     timeout_m: int = constants.default_delete_message_timeout_m,
     reply_to: Optional[Message] = None,
 ):
-    message_markdown = _mention_markdown(context.bot, chat_id, user_id, message)
+    message_markdown = await _mention_markdown(context.bot, chat_id, user_id, message)
 
     if reply_to is not None:
         sent_message = await reply_to.reply_text(
