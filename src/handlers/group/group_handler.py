@@ -93,7 +93,6 @@ async def on_new_chat_members(
                 chat_id=chat_id,
                 user_id=user_id,
                 data={
-                    "job_queue": context.job_queue,
                     "creation_time": datetime.now().timestamp(),
                 },
             )
@@ -228,7 +227,7 @@ async def on_notify_timeout(context: ContextTypes.DEFAULT_TYPE):
     bot, job = context.bot, context.job
     async with session_scope() as sess:
         chat_result = await sess.execute(
-            select(Chat).filter(Chat.id == job.data["chat_id"])
+            select(Chat).filter(Chat.id == job.chat_id)
         )
         chat = chat_result.scalar_one_or_none()
 
@@ -273,13 +272,13 @@ async def on_kick_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
                 )
     except Exception as e:
         tg_logger.exception(
-            f"Failed to kick {job.context['user_id']} from {job.context['chat_id']}",
+            f"Failed to kick {job.user_id} from {job.chat_id}",
             exc_info=e,
         )
         await _send_message_with_deletion(
             context,
-            job.context["chat_id"],
-            job.context["user_id"],
+            job.chat_id,
+            job.user_id,
             _("msg__failed_kick_response"),
         )
 
@@ -305,7 +304,7 @@ async def delete_message(context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 async def _mention_markdown(
-    bot: Bot, chat_id: int, user_id: int, message: Message
+    bot: Bot, chat_id: int, user_id: int, message: str
 ) -> str:
     """
     Format a message to include a markdown mention of a user.
@@ -314,22 +313,21 @@ async def _mention_markdown(
     bot (Bot): The Telegram bot instance.
     chat_id (int): The ID of the chat.
     user_id (int): The ID of the user to mention.
-    message (Message): The message to format.
+    message (str): The message to format.
 
     Returns:
     str: The formatted message with the user mention.
     """
     chat_member = await bot.get_chat_member(chat_id, user_id)
     user = chat_member.user
-    if not user.name:
-        # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)
-        user_mention_markdown = ""
-    else:
-        user_mention_markdown = user.mention_markdown()
+#    if not user.name:
+#        # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)
+#        user_mention_markdown = ""
+#    else:
+    user_mention_markdown = user.mention_markdown_v2()
 
     # \ нужен из-за формата сообщений в маркдауне
-    return message.replace("%USER_MENTION%", user_mention_markdown)
-
+    return message.replace("%USER\_MENTION%", user_mention_markdown)
 
 async def _send_message_with_deletion(
     context: ContextTypes.DEFAULT_TYPE,
@@ -355,7 +353,7 @@ async def _send_message_with_deletion(
         timeout_m * 60,
         chat_id=chat_id,
         user_id=user_id,
-        context={
+        data={
             "message_id": sent_message.message_id,
         },
     )
