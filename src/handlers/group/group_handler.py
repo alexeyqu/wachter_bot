@@ -337,7 +337,7 @@ async def _send_message_with_deletion(
     timeout_m: int = constants.default_delete_message_timeout_m,
     reply_to: Optional[Message] = None,
 ):
-    message_markdown = _mention_markdown(context.bot, chat_id, user_id, message)
+    message_markdown = await _mention_markdown(context.bot, chat_id, user_id, message)
 
     if reply_to is not None:
         sent_message = await reply_to.reply_text(
