@@ -14,7 +14,7 @@ from opentelemetry.sdk.resources import Resource
 dsn = os.environ.get("UPTRACE_DSN")
 
 resource = Resource(
-    attributes={"service.name": "wachter-bot", "service.version": "1.1.0"}
+    attributes={"service.name": "wachter-bot", "service.version": "1.1.0", "deployment.environment": os.environ.get("DEPLOYMENT_ENVIRONMENT")}
 )
 logger_provider = LoggerProvider(resource=resource)
 set_logger_provider(logger_provider)

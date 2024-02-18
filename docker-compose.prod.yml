@@ -7,14 +7,15 @@ services:
     volumes:
       - type: bind
         source: /home/github/prod/jobs.json
-        target: /app/jobs.json 
+        target: /app/jobs.json
     environment:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
-      - SENTRY_DSN=${SENTRY_DSN}
       - UPTRACE_DSN=${UPTRACE_DSN}
       - TELEGRAM_ERROR_CHAT_ID=${TELEGRAM_ERROR_CHAT_ID}
-      - DATABASE_URL=${POSTGRES_URL}
+      - DATABASE_URL=${DATABASE_URL}
+      - PERSISTENCE_DATABASE_URL=${PERSISTENCE_DATABASE_URL}
       - DEBUG=${DEBUG}
+      - DEPLOYMENT_ENVIRONMENT=production
       - TEAM_TELEGRAM_IDS=${TEAM_TELEGRAM_IDS}
     restart: unless-stopped
 

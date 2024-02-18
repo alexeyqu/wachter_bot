@@ -1,82 +1,67 @@
 from telegram.ext import (
+    ApplicationBuilder,
     CommandHandler,
-    Filters,
+    filters,
     MessageHandler,
-    PicklePersistence,
     CallbackQueryHandler,
     ChatMemberHandler,
+    PicklePersistence,
 )
-import sentry_sdk
-from sentry_sdk.integrations.logging import LoggingIntegration
+from ptbcontrib.ptb_jobstores.sqlalchemy import PTBSQLAlchemyJobStore
 from src.custom_filters import filter_bot_added
 from src.logging import tg_logger
 from src import handlers
-from src.job_persistence_updater import JobPersistenceUpdater
-import logging
 import os
 
-if "SENTRY_DSN" in os.environ:
-    sentry_sdk.init(
-        dsn=os.environ["SENTRY_DSN"],
-        traces_sample_rate=1.0,
-        profiles_sample_rate=1.0,
-        integrations=[
-            LoggingIntegration(
-                level=logging.INFO,           # Capture info and above as breadcrumbs
-                event_level=logging.WARNING   # Send records as events
-            ),
-        ],
-    )
 
 def main():
-    updater = JobPersistenceUpdater(
-        os.environ["TELEGRAM_TOKEN"],
-        persistence=PicklePersistence(filename="persistent_storage.pickle", store_callback_data=True),
+    application = (
+        ApplicationBuilder()
+        .persistence(PicklePersistence(filepath="persistent_storage.pickle"))
+        .token(os.environ["TELEGRAM_TOKEN"])
+        .build()
     )
-    dp = updater.dispatcher
+    if "PERSISTENCE_DATABASE_URL" in os.environ:
+        application.job_queue.scheduler.add_jobstore(
+            PTBSQLAlchemyJobStore(
+                application=application,
+                url=os.environ["PERSISTENCE_DATABASE_URL"],
+            )
+        )
 
-    dp.add_handler(CommandHandler("help", handlers.help_handler))
-    dp.add_handler(CommandHandler("listjobs", handlers.list_jobs_handler))
+    application.add_handler(CommandHandler("help", handlers.help_handler))
+    application.add_handler(CommandHandler("listjobs", handlers.list_jobs_handler))
 
     # group UX
-    dp.add_handler(
+    application.add_handler(
         ChatMemberHandler(
             handlers.my_chat_member_handler,
             ChatMemberHandler.MY_CHAT_MEMBER,
         )
     )
-    dp.add_handler(
+    application.add_handler(
         MessageHandler(
-            Filters.entity("hashtag") & Filters.chat_type.groups,
+            filters.Entity("hashtag") & filters.ChatType.GROUPS,
             handlers.on_hashtag_message,
-            pass_job_queue=True,
-            pass_user_data=True,
         )
     )
-    dp.add_handler(
+    application.add_handler(
         MessageHandler(
-            Filters.status_update.new_chat_members & filter_bot_added,
+            filters.StatusUpdate.NEW_CHAT_MEMBERS & filter_bot_added,
             handlers.on_new_chat_members,
-            pass_job_queue=True,
         )
     )
 
     # admin UX
-    dp.add_handler(CommandHandler("start", handlers.start_handler, pass_user_data=True))
-    dp.add_handler(CallbackQueryHandler(handlers.button_handler, pass_user_data=True))
-    dp.add_handler(
-        MessageHandler(
-            (Filters.text | Filters.entity),
-            handlers.message_handler,
-            pass_user_data=True,
-            pass_job_queue=True,
-        )
+    application.add_handler(CommandHandler("start", handlers.start_handler))
+    application.add_handler(CallbackQueryHandler(handlers.button_handler))
+    application.add_handler(
+        MessageHandler((filters.TEXT | filters.Entity), handlers.message_handler)
     )
-    dp.add_error_handler(handlers.error_handler)
+    application.add_error_handler(handlers.error_handler)
 
-    updater.start_polling()
     tg_logger.info("Bot has started successfully")
-    updater.idle()
+    application.run_polling()
 
 
 if __name__ == "__main__":
