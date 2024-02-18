@@ -56,7 +56,7 @@ def main():
     application.add_handler(CommandHandler("start", handlers.start_handler))
     application.add_handler(CallbackQueryHandler(handlers.button_handler))
     application.add_handler(
-        MessageHandler((filters.TEXT | filters.Entity), handlers.message_handler)
+        MessageHandler(filters.TEXT, handlers.message_handler)
     )
     application.add_error_handler(handlers.error_handler)
 
