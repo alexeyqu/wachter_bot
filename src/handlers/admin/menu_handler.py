@@ -430,10 +430,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     Returns:
     None: This function returns nothing.
     """
-    if not update.message:
-        update.message = update.edited_message
+    update_message = update.message or update.edited_message
 
-    chat_id = update.message.chat_id
+    chat_id = update_message.chat_id
 
     if chat_id > 0:
         action = context.user_data.get("action")
@@ -444,12 +443,12 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         chat_id = context.user_data["chat_id"]
 
         if action == constants.Actions.set_kick_timeout:
-            message = update.message.text
+            message = update_message.text
             try:
                 timeout = int(message)
                 assert timeout >= 0
             except:
-                await update.message.reply_text(
+                await update_message.reply_text(
                     _("msg__failed_set_kick_timeout_response")
                 )
                 return
@@ -469,18 +468,18 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await update.message.reply_text(
+            await update_message.reply_text(
                 _("msg__success_set_kick_timeout_response"),
                 reply_markup=reply_markup,
             )
 
         elif action == constants.Actions.set_notify_timeout:
-            message = update.message.text
+            message = update_message.text
             try:
                 timeout = int(message)
                 assert timeout >= 0
             except:
-                await update.message.reply_text(_("msg__failed_kick_response"))
+                await update_message.reply_text(_("msg__failed_kick_response"))
                 return
             async with session_scope() as sess:
                 chat = Chat(id=chat_id, notify_timeout=timeout)
@@ -496,7 +495,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 ]
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await update.message.reply_text(
+            await update_message.reply_text(
                 _("msg__sucess_set_notify_timeout_response"),
                 reply_markup=reply_markup,
             )
@@ -510,7 +509,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             constants.Actions.set_whois_length,
             constants.Actions.set_on_introduce_message_update,
         ]:
-            message = update.message.text_markdown
+            message = update_message.text_markdown
             reply_message = _("msg__set_new_message")
             async with session_scope() as sess:
                 if action == constants.Actions.set_on_new_chat_member_message_response:
@@ -533,15 +532,15 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                         chat = Chat(id=chat_id, whois_length=whois_length)
                         reply_message = _("msg__sucess_whois_length")
                     except:
-                        await update.message.reply_text(_("msg__failed_whois_response"))
+                        await update_message.reply_text(_("msg__failed_whois_response"))
                         return
 
                 if action == constants.Actions.set_on_introduce_message_update:
                     if (
                         "#update"
-                        not in update.message.parse_entities(types=["hashtag"]).values()
+                        not in update_message.parse_entities(types=["hashtag"]).values()
                     ):
-                        await update.message.reply_text(
+                        await update_message.reply_text(
                             _("msg__need_hashtag_update_response")
                         )
                         return
@@ -574,4 +573,4 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             context.user_data["action"] = None
 
             reply_markup = InlineKeyboardMarkup(keyboard)
-            await update.message.reply_text(reply_message, reply_markup=reply_markup)
+            await update_message.reply_text(reply_message, reply_markup=reply_markup)
