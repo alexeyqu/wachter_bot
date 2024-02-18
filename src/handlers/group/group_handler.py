@@ -295,7 +295,7 @@ async def delete_message(context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     bot, job = context.bot, context.job
     try:
-        await bot.delete_message(job.data["chat_id"], job.data["message_id"])
+        await bot.delete_message(job.chat_id, job.data["message_id"])
     except Exception as e:
         tg_logger.warning(
             f"can't delete {job.data['message_id']} from {job.chat_id}",
