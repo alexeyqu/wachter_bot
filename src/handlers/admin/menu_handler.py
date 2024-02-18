@@ -48,9 +48,9 @@ async def _job_rescheduling_helper(
             job_creation_time = datetime.fromtimestamp(job_data.get("creation_time"))
             new_timeout = job_creation_time + timedelta(seconds=timeout * 60)
 
-            # If the new timeout is in the past, set it to 0
+            # If the new timeout is in the past, set it to now
             if new_timeout < datetime.now():
-                new_timeout = 0
+                new_timeout = datetime.now()
 
             # Schedule the current job for removal
             job.schedule_removal()
