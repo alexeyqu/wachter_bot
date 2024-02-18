@@ -48,9 +48,9 @@ async def _job_rescheduling_helper(
             job_creation_time = datetime.fromtimestamp(job_data.get("creation_time"))
             new_timeout = job_creation_time + timedelta(seconds=timeout * 60)
 
-            # If the new timeout is in the past, set it to 0
+            # If the new timeout is in the past, set it to now
             if new_timeout < datetime.now():
-                new_timeout = 0
+                new_timeout = datetime.now()
 
             # Schedule the current job for removal
             job.schedule_removal()
@@ -510,9 +510,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             constants.Actions.set_whois_length,
             constants.Actions.set_on_introduce_message_update,
         ]:
-            message = update.message.text_markdown.replace(
-                "%USER\_MENTION%", "%USER_MENTION%"
-            )
+            message = update.message.text_markdown
             reply_message = _("msg__set_new_message")
             async with session_scope() as sess:
                 if action == constants.Actions.set_on_new_chat_member_message_response:
