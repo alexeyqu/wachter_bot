@@ -28,7 +28,9 @@ Then will be executed black against changed files in commits.
 
 ### Running
 
-1) Set `TELEGRAM_TOKEN` and `TELEGRAM_ERROR_CHAT_ID` environment variable;
+1) Run `cp env.template .env`;
+
+1) Set `TELEGRAM_TOKEN` and `TELEGRAM_ERROR_CHAT_ID` in `.env`;
 
 2) Run:
 
