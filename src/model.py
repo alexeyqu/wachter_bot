@@ -61,8 +61,8 @@ class Chat(Base):
         return f"<Chat(id={self.id})>"
     
     @classmethod
-    def get_new_chat(chat_id: int):
-        chat = Chat(id=chat_id)
+    def get_new_chat(cls, chat_id: int):
+        chat = cls(id=chat_id)
         # write default values from texts
         chat.on_new_chat_member_message = _("msg__new_chat_member")
         chat.on_known_new_chat_member_message = _("msg__known_new_chat_member")
