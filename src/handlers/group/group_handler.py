@@ -44,7 +44,7 @@ async def on_new_chat_members(
             chat = chat_result.scalars().first()
 
             if chat is None:
-                chat = Chat(id=chat_id)
+                chat = Chat.get_new_chat(chat_id)
                 sess.add(chat)
                 await sess.commit()
 
@@ -157,7 +157,7 @@ async def on_hashtag_message(
             chat_result = await sess.execute(select(Chat).where(Chat.id == chat_id))
             chat = chat_result.scalars().first()
             if chat is None:
-                chat = Chat(id=chat_id)
+                chat = Chat.get_new_chat(chat_id)
                 sess.add(chat)
                 await sess.commit()
 

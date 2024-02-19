@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm.session import sessionmaker
 from contextlib import asynccontextmanager
 
-from src.constants import get_uri
+from src import constants
+from src.texts import _
 
 Base = declarative_base()
 
@@ -58,6 +59,22 @@ class Chat(Base):
 
     def __repr__(self):
         return f"<Chat(id={self.id})>"
+    
+    @classmethod
+    def get_new_chat(chat_id: int):
+        chat = Chat(id=chat_id)
+        # write default values from texts
+        chat.on_new_chat_member_message = _("msg__new_chat_member")
+        chat.on_known_new_chat_member_message = _("msg__known_new_chat_member")
+        chat.on_introduce_message = _("msg__introduce")
+        chat.on_kick_message = _("msg__kick")
+        chat.notify_message = _("msg__notify")
+        chat.on_introduce_message_update = _("msg__introduce_update")
+
+        chat.kick_timeout = constants.default_kick_timeout_m
+        chat.notify_timeout = constants.default_notify_timeout_m
+        chat.whois_length = constants.default_whois_length
+        return chat
 
 
 class User(Base):
@@ -69,7 +86,7 @@ class User(Base):
     whois = Column(Text, nullable=False)
 
 
-engine = create_async_engine(get_uri(), echo=False)
+engine = create_async_engine(constants.get_uri(), echo=False)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
