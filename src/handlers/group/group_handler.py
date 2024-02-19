@@ -100,7 +100,7 @@ async def on_new_chat_members(
 
 def is_whois(update, chat_id):
     return (
-        "#whois" in update.message.parse_entities(types=["hashtag"]).values()
+        "#whois" in update.effective_message.parse_entities(types=["hashtag"]).values()
         and chat_id < 0
     )
 
@@ -148,13 +148,10 @@ async def on_hashtag_message(
     Returns:
     None
     """
-    # If the message was edited, update the message in the update object
-    update_message = update.message or update.edited_message
-
-    chat_id = update_message.chat_id
+    chat_id = update.effective_message.chat_id
 
     if is_whois(update, chat_id):
-        user_id = update_message.from_user.id
+        user_id = update.effective_message.from_user.id
 
         async with session_scope() as sess:
             chat_result = await sess.execute(select(Chat).where(Chat.id == chat_id))
@@ -164,14 +161,14 @@ async def on_hashtag_message(
                 sess.add(chat)
                 await sess.commit()
 
-            if len(update_message.text) <= chat.whois_length:
+            if len(update.effective_message.text) <= chat.whois_length:
                 await _send_message_with_deletion(
                     context,
                     chat_id,
                     user_id,
                     # TODO move to chat DB
                     _("msg__short_whois").format(whois_length=chat.whois_length),
-                    reply_to=update_message,
+                    reply_to=update.effective_message,
                 )
                 return
 
@@ -182,7 +179,7 @@ async def on_hashtag_message(
                 select(User).where(User.chat_id == chat_id, User.user_id == user_id)
             )
             existing_user = result.scalars().first()
-            entities = update_message.parse_entities(types=["HASHTAG"])
+            entities = update.effective_message.parse_entities(types=["HASHTAG"])
             if (
                 existing_user
                 and "#update"
@@ -194,10 +191,10 @@ async def on_hashtag_message(
                     user_id,
                     message,
                     timeout_m=chat.on_introduce_message_update,
-                    reply_to=update_message,
+                    reply_to=update.effective_message,
                 )
                 return
-            user = User(chat_id=chat_id, user_id=user_id, whois=update_message.text)
+            user = User(chat_id=chat_id, user_id=user_id, whois=update.effective_message.text)
             await sess.merge(user)
 
         removed = False
@@ -209,7 +206,7 @@ async def on_hashtag_message(
                 chat_id,
                 user_id,
                 message,
-                reply_to=update_message,
+                reply_to=update.effective_message,
             )
 
 
