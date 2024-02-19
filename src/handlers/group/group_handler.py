@@ -189,8 +189,7 @@ async def on_hashtag_message(
                     context,
                     chat_id,
                     user_id,
-                    message,
-                    timeout_m=chat.on_introduce_message_update,
+                    chat.on_introduce_message_update,
                     reply_to=update.effective_message,
                 )
                 return
