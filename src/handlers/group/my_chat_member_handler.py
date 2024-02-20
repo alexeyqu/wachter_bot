@@ -31,19 +31,7 @@ async def my_chat_member_handler(update: Update, context: ContextTypes.DEFAULT_T
             chat = result.scalars().first()
 
             if chat is None:
-                chat = Chat(id=update.effective_chat.id)
-                # write default values from texts
-                chat.on_new_chat_member_message = _("msg__new_chat_member")
-                chat.on_known_new_chat_member_message = _("msg__known_new_chat_member")
-                chat.on_introduce_message = _("msg__introduce")
-                chat.on_kick_message = _("msg__kick")
-                chat.notify_message = _("msg__notify")
-                chat.on_introduce_message_update = _("msg__introduce_update")
-
-                chat.kick_timeout = constants.default_kick_timeout_m
-                chat.notify_timeout = constants.default_notify_timeout_m
-                chat.whois_length = constants.default_whois_length
-
+                chat = Chat.get_new_chat(update.effective_chat.id)
                 sess.add(chat)
                 # hack with adding an empty #whois to prevent slow /start cmd
                 # TODO after v1.0: rework the DB schema
