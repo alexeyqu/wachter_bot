@@ -347,6 +347,9 @@ async def _send_message_with_deletion(
             chat_id, text=message_markdown, parse_mode=ParseMode.MARKDOWN
         )
 
+    # correctly handle negative timeouts
+    timeout_m = max(timeout_m, constants.default_delete_message_timeout_m)
+
     context.job_queue.run_once(
         delete_message,
         timeout_m * 60,
