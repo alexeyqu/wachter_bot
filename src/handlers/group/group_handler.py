@@ -201,7 +201,7 @@ async def on_hashtag_message(
             await sess.merge(user)
 
         removed = False
-        removed = remove_user_jobs_from_queue(context, user_id, chat_id)
+        removed = await remove_user_jobs_from_queue(context, user_id, chat_id)
 
         if removed:
             await _send_message_with_deletion(
