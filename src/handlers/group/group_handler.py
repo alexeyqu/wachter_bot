@@ -32,7 +32,7 @@ async def on_new_chat_members(
 
     for user_id in user_ids:
         for job in context.job_queue.jobs():
-            if job.data["user_id"] == user_id and job.data["chat_id"] == chat_id:
+            if job.data.get("user_id") == user_id and job.data.get("chat_id") == chat_id:
                 job.schedule_removal()
 
         async with session_scope() as sess:
@@ -123,11 +123,11 @@ async def remove_user_jobs_from_queue(context, user_id, chat_id):
     """
     removed = False
     for job in context.job_queue.jobs():
-        if job.data["user_id"] == user_id and job.data["chat_id"] == chat_id:
+        if job.data.get("user_id") == user_id and job.data.get("chat_id") == chat_id:
             if "message_id" in job.data:
                 try:
                     await context.bot.delete_message(
-                        job.data["chat_id"], job.data["message_id"]
+                        job.data.get("chat_id"), job.data["message_id"]
                     )
                 except Exception as e:
                     tg_logger.warning(
@@ -232,8 +232,8 @@ async def on_notify_timeout(context: ContextTypes.DEFAULT_TYPE):
 
         await _send_message_with_deletion(
             context,
-            job.data["chat_id"],
-            job.data["user_id"],
+            job.data.get("chat_id"),
+            job.data.get("user_id"),
             chat.notify_message,
             timeout_m=chat.kick_timeout - chat.notify_timeout,
         )
@@ -253,8 +253,8 @@ async def on_kick_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
 
     try:
         await bot.ban_chat_member(
-            job.data["chat_id"],
-            job.data["user_id"],
+            job.data.get("chat_id"),
+            job.data.get("user_id"),
             until_date=datetime.now() + timedelta(seconds=60),
         )
 
@@ -265,8 +265,8 @@ async def on_kick_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
             if chat.on_kick_message.lower() not in ["false", "0"]:
                 await _send_message_with_deletion(
                     context,
-                    job.data["chat_id"],
-                    job.data["user_id"],
+                    job.data.get("chat_id"),
+                    job.data.get("user_id"),
                     chat.on_kick_message,
                 )
     except Exception as e:
@@ -276,8 +276,8 @@ async def on_kick_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
         )
         await _send_message_with_deletion(
             context,
-            job.data["chat_id"],
-            job.data["user_id"],
+            job.data.get("chat_id"),
+            job.data.get("user_id"),
             _("msg__failed_kick_response"),
         )
 
