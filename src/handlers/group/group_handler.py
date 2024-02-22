@@ -71,7 +71,7 @@ async def on_new_chat_members(
             user_id,
             message,
             # 1 week which is considered infinity
-            timeout_m=constants.default_delete_message_timeout_m * 24 * 7 * 60,
+            timeout_m=constants.default_delete_message_timeout_m * 24 * 7,
             reply_to=update.message,
         )
 
