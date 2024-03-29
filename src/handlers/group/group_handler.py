@@ -70,8 +70,8 @@ async def on_new_chat_members(
             chat_id,
             user_id,
             message,
-            # 1 week which is considered infinity
-            timeout_m=constants.default_delete_message_timeout_m * 24 * 7,
+            # 36 hours which is considered infinity; bots can't delete messages older than 48h
+            timeout_m=constants.default_delete_message_timeout_m * 24 * 1.5,
             reply_to=update.message,
         )
 
