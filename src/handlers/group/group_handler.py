@@ -174,28 +174,6 @@ async def on_hashtag_message(
 
             message = chat.on_introduce_message
 
-        async with session_scope() as sess:
-            result = await sess.execute(
-                select(User).where(User.chat_id == chat_id, User.user_id == user_id)
-            )
-            existing_user = result.scalars().first()
-            entities = update.effective_message.parse_entities(types=["HASHTAG"])
-            if (
-                existing_user
-                and "#update"
-                not in entities.values()
-            ):
-                await _send_message_with_deletion(
-                    context,
-                    chat_id,
-                    user_id,
-                    chat.on_introduce_message_update,
-                    reply_to=update.effective_message,
-                )
-                return
-            user = User(chat_id=chat_id, user_id=user_id, whois=update.effective_message.text)
-            await sess.merge(user)
-
         removed = False
         removed = remove_user_jobs_from_queue(context, user_id, chat_id)
 
