@@ -42,7 +42,7 @@ async def _job_rescheduling_helper(
     # Iterating through all the jobs currently in the job queue
     for job in context.job_queue.jobs():
         # If the job's name matches the name of the job function provided
-        if job.name == job_func.__name__:
+        if job.name == job_func.__name__ and chat_id == job.data.get('chat_id'):
             # Extracting the job context and calculating the new timeout
             job_data = job.data
             job_creation_time = datetime.fromtimestamp(job_data.get("creation_time"))
