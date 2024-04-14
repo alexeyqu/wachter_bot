@@ -79,7 +79,6 @@ jobs:
             echo $CR_PAT | docker login  ghcr.io -u $GITHUB_USERNAME
             cd ${{ env.ROOT_DIR }}
             touch .env
-            touch jobs.json
             echo DATABASE_URL=${{ env.DATABASE_URL }} >> .env
             echo PERSISTENCE_DATABASE_URL=${{ env.PERSISTENCE_DATABASE_URL }} >> .env
             echo TELEGRAM_TOKEN=${{ env.TELEGRAM_TOKEN }} >> .env

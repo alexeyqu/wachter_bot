@@ -10,7 +10,7 @@ from src.texts import _
 
 
 async def my_chat_member_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    old_status, new_status = update.my_chat_member.difference().get("status")
+    old_status, new_status = update.my_chat_member.difference().get("status", (None, None))
 
     if old_status == ChatMember.LEFT and new_status == ChatMember.MEMBER:
         # which means the bot was added to the chat
