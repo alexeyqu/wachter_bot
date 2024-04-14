@@ -23,6 +23,7 @@ aiosqlite = "*"
 grpcio = "*"
 opentelemetry-sdk = "*"
 opentelemetry-exporter-otlp = "*"
+opentelemetry-api = "*"
 
 [dev-packages]
 "autopep8" = "*"

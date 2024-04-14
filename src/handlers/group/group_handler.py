@@ -3,6 +3,7 @@ from telegram import Bot, Message, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from typing import Optional
+from opentelemetry import metrics
 
 from sqlalchemy import select
 
@@ -10,6 +11,9 @@ from src.logging import tg_logger
 from src import constants
 from src.texts import _
 from src.model import Chat, User, session_scope
+
+meter = metrics.get_meter("new_member.meter", version="2.0.0")
+user_counter = meter.create_counter("new_member_counter", unit = "1")
 
 
 async def on_new_chat_members(
@@ -25,6 +29,7 @@ async def on_new_chat_members(
     Returns:
     None
     """
+    user_counter.add(1)
     chat_id = update.message.chat_id
     user_ids = [
         new_chat_member.id for new_chat_member in update.message.new_chat_members
@@ -280,9 +285,7 @@ async def delete_message(context: ContextTypes.DEFAULT_TYPE) -> None:
         )
 
 
-async def _mention_markdown(
-    bot: Bot, chat_id: int, user_id: int, message: str
-) -> str:
+async def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: str) -> str:
     """
     Format a message to include a markdown mention of a user.
 
@@ -297,14 +300,15 @@ async def _mention_markdown(
     """
     chat_member = await bot.get_chat_member(chat_id, user_id)
     user = chat_member.user
-#    if not user.name:
-#        # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)
-#        user_mention_markdown = ""
-#    else:
+    #    if not user.name:
+    #        # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)
+    #        user_mention_markdown = ""
+    #    else:
     user_mention_markdown = user.mention_markdown_v2()
 
     # \ нужен из-за формата сообщений в маркдауне
     return message.replace("%USER\_MENTION%", user_mention_markdown)
+
 
 async def _send_message_with_deletion(
     context: ContextTypes.DEFAULT_TYPE,
