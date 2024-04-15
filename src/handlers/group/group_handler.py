@@ -12,8 +12,12 @@ from src import constants
 from src.texts import _
 from src.model import Chat, User, session_scope
 
-meter = metrics.get_meter("new_member.meter", version="2.0.0")
-user_counter = meter.create_counter("new_member_counter", unit = "1")
+new_member_meter = metrics.get_meter("new_member.meter", version="2.0.0")
+user_counter = new_member_meter.create_counter("new_member_counter", unit="1")
+new_whois_meter = metrics.get_meter("new_whois.meter", version="2.0.0")
+whois_counter = new_whois_meter.create_counter("new_whois_counter", unit="1")
+new_ban_meter = metrics.get_meter("ban.meter", version="2.0.0")
+ban_counter = new_ban_meter.create_counter("ban_counter", unit="1")
 
 
 async def on_new_chat_members(
@@ -37,7 +41,7 @@ async def on_new_chat_members(
 
     for user_id in user_ids:
         for job in context.job_queue.jobs():
-            if job.user_id == user_id and job.chat_id == chat_id:
+            if job.data.get("user_id") == user_id and job.data.get("chat_id") == chat_id:
                 job.schedule_removal()
 
         async with session_scope() as sess:
@@ -75,8 +79,8 @@ async def on_new_chat_members(
             chat_id,
             user_id,
             message,
-            # 1 week which is considered infinity
-            timeout_m=constants.default_delete_message_timeout_m * 24 * 7 * 60,
+            # 36 hours which is considered infinity; bots can't delete messages older than 48h
+            timeout_m=constants.default_delete_message_timeout_m * 24 * 1.5,
             reply_to=update.message,
         )
 
@@ -87,6 +91,8 @@ async def on_new_chat_members(
                 chat_id=chat_id,
                 user_id=user_id,
                 data={
+                    "chat_id": chat_id,
+                    "user_id": user_id,
                     "creation_time": datetime.now().timestamp(),
                 },
             )
@@ -98,6 +104,8 @@ async def on_new_chat_members(
                 chat_id=chat_id,
                 user_id=user_id,
                 data={
+                    "chat_id": chat_id,
+                    "user_id": user_id,
                     "creation_time": datetime.now().timestamp(),
                 },
             )
@@ -124,15 +132,15 @@ async def remove_user_jobs_from_queue(context, user_id, chat_id):
     """
     removed = False
     for job in context.job_queue.jobs():
-        if job.user_id == user_id and job.chat_id == chat_id:
+        if job.data.get("user_id") == user_id and job.data.get("chat_id") == chat_id:
             if "message_id" in job.data:
                 try:
                     await context.bot.delete_message(
-                        job.chat_id, job.data["message_id"]
+                        job.data.get("chat_id"), job.data["message_id"]
                     )
                 except Exception as e:
                     tg_logger.warning(
-                        f"can't delete {job.data['message_id']} from {job.chat_id}",
+                        f"can't delete {job.data['message_id']} from {job.data['chat_id']}",
                         exc_info=e,
                     )
             job.schedule_removal()
@@ -157,6 +165,7 @@ async def on_hashtag_message(
 
     if is_whois(update, chat_id):
         user_id = update.effective_message.from_user.id
+        whois_counter.add(1)
 
         async with session_scope() as sess:
             chat_result = await sess.execute(select(Chat).where(Chat.id == chat_id))
@@ -180,7 +189,7 @@ async def on_hashtag_message(
             message = chat.on_introduce_message
 
         removed = False
-        removed = remove_user_jobs_from_queue(context, user_id, chat_id)
+        removed = await remove_user_jobs_from_queue(context, user_id, chat_id)
 
         if removed:
             await _send_message_with_deletion(
@@ -204,13 +213,15 @@ async def on_notify_timeout(context: ContextTypes.DEFAULT_TYPE):
     """
     bot, job = context.bot, context.job
     async with session_scope() as sess:
-        chat_result = await sess.execute(select(Chat).filter(Chat.id == job.chat_id))
+        chat_result = await sess.execute(
+            select(Chat).filter(Chat.id == job.data['chat_id'])
+        )
         chat = chat_result.scalar_one_or_none()
 
         await _send_message_with_deletion(
             context,
-            job.chat_id,
-            job.user_id,
+            job.data.get("chat_id"),
+            job.data.get("user_id"),
             chat.notify_message,
             timeout_m=chat.kick_timeout - chat.notify_timeout,
         )
@@ -230,31 +241,32 @@ async def on_kick_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
 
     try:
         await bot.ban_chat_member(
-            job.chat_id,
-            job.user_id,
+            job.data.get("chat_id"),
+            job.data.get("user_id"),
             until_date=datetime.now() + timedelta(seconds=60),
         )
+        ban_counter.add(1)
 
         async with session_scope() as sess:
-            chat_result = await sess.execute(select(Chat).where(Chat.id == job.chat_id))
+            chat_result = await sess.execute(select(Chat).where(Chat.id == job.data['chat_id']))
             chat = chat_result.scalar_one_or_none()
 
             if chat.on_kick_message.lower() not in ["false", "0"]:
                 await _send_message_with_deletion(
                     context,
-                    job.chat_id,
-                    job.user_id,
+                    job.data.get("chat_id"),
+                    job.data.get("user_id"),
                     chat.on_kick_message,
                 )
     except Exception as e:
         tg_logger.exception(
-            f"Failed to kick {job.user_id} from {job.chat_id}",
+            f"Failed to kick {job.data['user_id']} from {job.data['chat_id']}",
             exc_info=e,
         )
         await _send_message_with_deletion(
             context,
-            job.chat_id,
-            job.user_id,
+            job.data.get("chat_id"),
+            job.data.get("user_id"),
             _("msg__failed_kick_response"),
         )
 
@@ -271,10 +283,10 @@ async def delete_message(context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     bot, job = context.bot, context.job
     try:
-        await bot.delete_message(job.chat_id, job.data["message_id"])
+        await bot.delete_message(job.data['chat_id'], job.data["message_id"])
     except Exception as e:
         tg_logger.warning(
-            f"can't delete {job.data['message_id']} from {job.chat_id}",
+            f"can't delete {job.data['message_id']} from {job.data['chat_id']}",
             exc_info=e,
         )
 
@@ -323,12 +335,17 @@ async def _send_message_with_deletion(
             chat_id, text=message_markdown, parse_mode=ParseMode.MARKDOWN
         )
 
+    # correctly handle negative timeouts
+    timeout_m = max(timeout_m, constants.default_delete_message_timeout_m)
+
     context.job_queue.run_once(
         delete_message,
         timeout_m * 60,
         chat_id=chat_id,
         user_id=user_id,
         data={
+            "chat_id": chat_id,
+            "user_id": user_id,
             "message_id": sent_message.message_id,
         },
     )
