@@ -3,7 +3,6 @@ from telegram import Bot, Message, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from typing import Optional
-from opentelemetry import metrics
 
 from sqlalchemy import select
 
@@ -11,13 +10,12 @@ from src.logging import tg_logger
 from src import constants
 from src.texts import _
 from src.model import Chat, User, session_scope
+from src.handlers.utils import setup_counter
 
-new_member_meter = metrics.get_meter("new_member.meter", version="2.0.0")
-user_counter = new_member_meter.create_counter("new_member_counter", unit="1")
-new_whois_meter = metrics.get_meter("new_whois.meter", version="2.0.0")
-whois_counter = new_whois_meter.create_counter("new_whois_counter", unit="1")
-new_ban_meter = metrics.get_meter("ban.meter", version="2.0.0")
-ban_counter = new_ban_meter.create_counter("ban_counter", unit="1")
+
+new_member_counter = setup_counter("new_member.meter", "new_member_counter")
+whois_counter = setup_counter("new_whois.meter", "new_whois_counter")
+ban_counter = setup_counter("ban.meter", "ban_counter")
 
 
 async def on_new_chat_members(
