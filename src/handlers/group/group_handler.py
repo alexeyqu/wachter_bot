@@ -3,7 +3,6 @@ from telegram import Bot, Message, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from typing import Optional
-from opentelemetry import metrics
 
 from sqlalchemy import select
 
@@ -11,9 +10,12 @@ from src.logging import tg_logger
 from src import constants
 from src.texts import _
 from src.model import Chat, User, session_scope
+from src.handlers.utils import setup_counter
 
-meter = metrics.get_meter("new_member.meter", version="2.0.0")
-user_counter = meter.create_counter("new_member_counter", unit = "1")
+
+new_member_counter = setup_counter("new_member.meter", "new_member_counter")
+whois_counter = setup_counter("new_whois.meter", "new_whois_counter")
+ban_counter = setup_counter("ban.meter", "ban_counter")
 
 
 async def on_new_chat_members(
@@ -29,7 +31,7 @@ async def on_new_chat_members(
     Returns:
     None
     """
-    user_counter.add(1)
+    new_member_counter.add(1)
     chat_id = update.message.chat_id
     user_ids = [
         new_chat_member.id for new_chat_member in update.message.new_chat_members
@@ -161,6 +163,7 @@ async def on_hashtag_message(
 
     if is_whois(update, chat_id):
         user_id = update.effective_message.from_user.id
+        whois_counter.add(1)
 
         async with session_scope() as sess:
             chat_result = await sess.execute(select(Chat).where(Chat.id == chat_id))
@@ -240,6 +243,7 @@ async def on_kick_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
             job.data.get("user_id"),
             until_date=datetime.now() + timedelta(seconds=60),
         )
+        ban_counter.add(1)
 
         async with session_scope() as sess:
             chat_result = await sess.execute(select(Chat).where(Chat.id == job.data['chat_id']))

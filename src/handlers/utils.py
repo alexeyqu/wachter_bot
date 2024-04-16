@@ -2,8 +2,17 @@ from functools import wraps
 
 from telegram import Update
 from telegram.ext import CallbackContext
+from opentelemetry import metrics
 
 from src.constants import DEBUG, TEAM_TELEGRAM_IDS
+
+
+def setup_counter(meter_name, counter_name, version="2.0.0"):
+    """
+    A helper function to remove duplication of code for counters creation.
+    """
+    meter = metrics.get_meter(meter_name, version=version)
+    return meter.create_counter(counter_name, unit="1")
 
 
 def admin(func):
