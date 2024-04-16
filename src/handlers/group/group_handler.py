@@ -10,6 +10,12 @@ from src.logging import tg_logger
 from src import constants
 from src.texts import _
 from src.model import Chat, User, session_scope
+from src.handlers.utils import setup_counter
+
+
+new_member_counter = setup_counter("new_member.meter", "new_member_counter")
+whois_counter = setup_counter("new_whois.meter", "new_whois_counter")
+ban_counter = setup_counter("ban.meter", "ban_counter")
 
 
 async def on_new_chat_members(
@@ -25,6 +31,7 @@ async def on_new_chat_members(
     Returns:
     None
     """
+    new_member_counter.add(1)
     chat_id = update.message.chat_id
     user_ids = [
         new_chat_member.id for new_chat_member in update.message.new_chat_members
@@ -156,6 +163,7 @@ async def on_hashtag_message(
 
     if is_whois(update, chat_id):
         user_id = update.effective_message.from_user.id
+        whois_counter.add(1)
 
         async with session_scope() as sess:
             chat_result = await sess.execute(select(Chat).where(Chat.id == chat_id))
@@ -235,6 +243,7 @@ async def on_kick_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
             job.data.get("user_id"),
             until_date=datetime.now() + timedelta(seconds=60),
         )
+        ban_counter.add(1)
 
         async with session_scope() as sess:
             chat_result = await sess.execute(select(Chat).where(Chat.id == job.data['chat_id']))
@@ -280,9 +289,7 @@ async def delete_message(context: ContextTypes.DEFAULT_TYPE) -> None:
         )
 
 
-async def _mention_markdown(
-    bot: Bot, chat_id: int, user_id: int, message: str
-) -> str:
+async def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: str) -> str:
     """
     Format a message to include a markdown mention of a user.
 
@@ -297,14 +304,15 @@ async def _mention_markdown(
     """
     chat_member = await bot.get_chat_member(chat_id, user_id)
     user = chat_member.user
-#    if not user.name:
-#        # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)
-#        user_mention_markdown = ""
-#    else:
+    #    if not user.name:
+    #        # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)
+    #        user_mention_markdown = ""
+    #    else:
     user_mention_markdown = user.mention_markdown_v2()
 
     # \ нужен из-за формата сообщений в маркдауне
     return message.replace("%USER\_MENTION%", user_mention_markdown)
+
 
 async def _send_message_with_deletion(
     context: ContextTypes.DEFAULT_TYPE,
