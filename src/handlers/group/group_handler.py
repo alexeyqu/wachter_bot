@@ -31,8 +31,8 @@ async def on_new_chat_members(
     Returns:
     None
     """
-    new_member_counter.add(1)
     chat_id = update.message.chat_id
+    new_member_counter.add(1, {"chat_id": chat_id})
     user_ids = [
         new_chat_member.id for new_chat_member in update.message.new_chat_members
     ]
