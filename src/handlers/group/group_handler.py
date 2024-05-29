@@ -186,6 +186,10 @@ async def on_hashtag_message(
 
             message = chat.on_introduce_message
 
+        async with session_scope() as sess:
+            user = User(chat_id=chat_id, user_id=user_id, whois=update.effective_message.text)
+            await sess.merge(user)
+
         removed = False
         removed = await remove_user_jobs_from_queue(context, user_id, chat_id)
 
