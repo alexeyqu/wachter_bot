@@ -19,10 +19,21 @@ ban_counter = setup_counter("ban.meter", "ban_counter")
 
 async def db_metrics_reader_helper(context: ContextTypes.DEFAULT_TYPE):
     chats_histogram = setup_histogram("chats.meter", "chats_counter")
+    users_histogram = setup_histogram("users.meter", "users_counter")
+    unique_users_histogram = setup_histogram("unique_users.meter", "unique_users_counter")
     async with session_scope() as sess:
+        # Number of chats
         result = await sess.execute(select(func.count(Chat.id)))
         chat_count = result.scalar()
         chats_histogram.record(chat_count)
+        # Total number of users
+        result = await sess.execute(select(func.count()).select_from(User))
+        users_count = result.scalar()
+        users_histogram.record(users_count)
+        # Number of unique users
+        result = await sess.execute(select(func.count(func.distinct(User.user_id))))
+        unique_users_count = result.scalar()
+        unique_users_histogram.record(unique_users_count)
 
 async def on_new_chat_members(
     update: Update, context: ContextTypes.DEFAULT_TYPE
