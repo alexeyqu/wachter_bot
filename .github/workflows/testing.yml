@@ -23,6 +23,8 @@ jobs:
 
     - name: Install dependencies
       run: pipenv install 
+    - name: Install asyncio
+      run: pip install httpcore[asyncio]
 
     - name: Run tests
       run: pipenv run python -m pytest ./test -x -s
