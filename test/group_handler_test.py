@@ -2,12 +2,16 @@ import pytest
 from sqlalchemy import select
 from unittest.mock import patch
 import os
-with patch.dict('os.environ', {
-    'TELEGRAM_TOKEN': 'dummy_token',
-    'TELEGRAM_ERROR_CHAT_ID': 'dummy_chat_id',
-    'UPTRACE_DSN': 'dummy_dsn',
-    'DEPLOYMENT_ENVIRONMENT': 'testing'
-}):
+
+with patch.dict(
+    "os.environ",
+    {
+        "TELEGRAM_TOKEN": "dummy_token",
+        "TELEGRAM_ERROR_CHAT_ID": "dummy_chat_id",
+        "UPTRACE_DSN": "dummy_dsn",
+        "DEPLOYMENT_ENVIRONMENT": "testing",
+    },
+):
     from src.handlers.group.group_handler import on_hashtag_message
     from src.model import User, Chat
 from src.texts import _
@@ -96,9 +100,9 @@ async def test_on_hashtag_message_short_whois(
     expected_reply = _("msg__short_whois").format(whois_length=whois_length)
     # Fetch the actual reply text
     actual_reply_call = mock_update.effective_message.reply_text.call_args
-    actual_reply = actual_reply_call[1]['text'] if actual_reply_call else None
+    actual_reply = actual_reply_call[1]["text"] if actual_reply_call else None
 
     # Improved assertion with detailed error message
-    assert actual_reply == expected_reply, (
-        f"Assertion failed: Expected reply text '{expected_reply}' but got '{actual_reply}'."
-    )
+    assert (
+        actual_reply == expected_reply
+    ), f"Assertion failed: Expected reply text '{expected_reply}' but got '{actual_reply}'."
