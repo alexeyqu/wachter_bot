@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9  # required by Pipfile
+
+    - name: Cache pipenv dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.local/share/virtualenvs
+        key: ${{ runner.os }}-pipenv-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pipenv-
+
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install pipenv
+      run: pip install pipenv
+
+    - name: Install dependencies
+      run: pipenv install 
+
+    - name: Install pytest explicitly (failes without)
+      run: pipenv run pip install pytest
+
+    - name: Install asyncio (we doing it in Dockerfile)
+      run: pipenv run pip install 'httpcore[asyncio]'
+
+    - name: Run tests
+      run: pipenv run python -m pytest ./test -x -s
+      shell: bash
