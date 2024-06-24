@@ -17,10 +17,13 @@ new_member_counter = setup_counter("new_member.meter", "new_member_counter")
 whois_counter = setup_counter("new_whois.meter", "new_whois_counter")
 ban_counter = setup_counter("ban.meter", "ban_counter")
 
+
 async def db_metrics_reader_helper(context: ContextTypes.DEFAULT_TYPE):
     chats_histogram = setup_histogram("chats.meter", "chats_counter")
     users_histogram = setup_histogram("users.meter", "users_counter")
-    unique_users_histogram = setup_histogram("unique_users.meter", "unique_users_counter")
+    unique_users_histogram = setup_histogram(
+        "unique_users.meter", "unique_users_counter"
+    )
     async with session_scope() as sess:
         # Number of chats
         result = await sess.execute(select(func.count(Chat.id)))
@@ -34,6 +37,7 @@ async def db_metrics_reader_helper(context: ContextTypes.DEFAULT_TYPE):
         result = await sess.execute(select(func.count(func.distinct(User.user_id))))
         unique_users_count = result.scalar()
         unique_users_histogram.record(unique_users_count)
+
 
 async def on_new_chat_members(
     update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -50,14 +54,19 @@ async def on_new_chat_members(
     """
     chat_id = update.message.chat_id
     new_member_counter.add(1, {"chat_id": chat_id})
-    context.job_queue.run_repeating(db_metrics_reader_helper, 3600, name="metrics_exporter")
+    context.job_queue.run_repeating(
+        db_metrics_reader_helper, 3600, name="metrics_exporter"
+    )
     user_ids = [
         new_chat_member.id for new_chat_member in update.message.new_chat_members
     ]
 
     for user_id in user_ids:
         for job in context.job_queue.jobs():
-            if job.data.get("user_id") == user_id and job.data.get("chat_id") == chat_id:
+            if (
+                job.data.get("user_id") == user_id
+                and job.data.get("chat_id") == chat_id
+            ):
                 job.schedule_removal()
 
         async with session_scope() as sess:
@@ -205,7 +214,9 @@ async def on_hashtag_message(
             message = chat.on_introduce_message
 
         async with session_scope() as sess:
-            user = User(chat_id=chat_id, user_id=user_id, whois=update.effective_message.text)
+            user = User(
+                chat_id=chat_id, user_id=user_id, whois=update.effective_message.text
+            )
             await sess.merge(user)
 
         removed = False
@@ -234,7 +245,7 @@ async def on_notify_timeout(context: ContextTypes.DEFAULT_TYPE):
     bot, job = context.bot, context.job
     async with session_scope() as sess:
         chat_result = await sess.execute(
-            select(Chat).filter(Chat.id == job.data['chat_id'])
+            select(Chat).filter(Chat.id == job.data["chat_id"])
         )
         chat = chat_result.scalar_one_or_none()
 
@@ -268,7 +279,9 @@ async def on_kick_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
         ban_counter.add(1)
 
         async with session_scope() as sess:
-            chat_result = await sess.execute(select(Chat).where(Chat.id == job.data['chat_id']))
+            chat_result = await sess.execute(
+                select(Chat).where(Chat.id == job.data["chat_id"])
+            )
             chat = chat_result.scalar_one_or_none()
 
             if chat.on_kick_message.lower() not in ["false", "0"]:
@@ -303,7 +316,7 @@ async def delete_message(context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     bot, job = context.bot, context.job
     try:
-        await bot.delete_message(job.data['chat_id'], job.data["message_id"])
+        await bot.delete_message(job.data["chat_id"], job.data["message_id"])
     except Exception as e:
         tg_logger.warning(
             f"can't delete {job.data['message_id']} from {job.data['chat_id']}",
