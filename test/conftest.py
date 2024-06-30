@@ -30,7 +30,7 @@ def mock_update():
 
     update = AsyncMock()
     update.callback_query = callback_query
-    update.message = message_mock
+    update.effective_message = message_mock
     return update
 
 
