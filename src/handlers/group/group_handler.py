@@ -64,7 +64,8 @@ async def on_new_chat_members(
     for user_id in user_ids:
         for job in context.job_queue.jobs():
             if (
-                job.data.get("user_id") == user_id
+                job.data is not None
+                and job.data.get("user_id") == user_id
                 and job.data.get("chat_id") == chat_id
             ):
                 job.schedule_removal()
@@ -106,6 +107,7 @@ async def on_new_chat_members(
             message,
             # 36 hours which is considered infinity; bots can't delete messages older than 48h
             timeout_m=constants.default_delete_message_timeout_m * 24 * 1.5,
+            is_welcome=True,
             reply_to=update.message,
         )
 
@@ -291,6 +293,18 @@ async def on_kick_timeout(context: ContextTypes.DEFAULT_TYPE) -> None:
                     job.data.get("user_id"),
                     chat.on_kick_message,
                 )
+
+        for job_ in context.job_queue.jobs():
+            if (
+                job_.data is not None
+                and job_.data.get("user_id") == job.data.get("user_id")
+                and job_.data.get("chat_id") == job.data.get("chat_id")
+                and job_.data.get("message_id") is not None
+                and job_.data.get("is_welcome") is not None
+                and job_.data.get("is_welcome") == True
+            ):
+                await bot.delete_message(job_.data["chat_id"], job_.data["message_id"])
+
     except Exception as e:
         tg_logger.exception(
             f"Failed to kick {job.data['user_id']} from {job.data['chat_id']}",
@@ -355,6 +369,7 @@ async def _send_message_with_deletion(
     user_id: int,
     message: str,
     timeout_m: int = constants.default_delete_message_timeout_m,
+    is_welcome: bool = None,
     reply_to: Optional[Message] = None,
 ):
     message_markdown = await _mention_markdown(context.bot, chat_id, user_id, message)
@@ -380,5 +395,6 @@ async def _send_message_with_deletion(
             "chat_id": chat_id,
             "user_id": user_id,
             "message_id": sent_message.message_id,
+            "is_welcome": is_welcome,
         },
     )
