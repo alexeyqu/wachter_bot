@@ -9,7 +9,7 @@ alembic = "*"
 pre-commit = "*"
 pylint = "*"
 black = "*"
-pyTelegramLogger = "*"
+python-telegram-handler = "*"
 pytest = "*"
 pytest-mock = "*"
 httpcore = {extras = ["asyncio"], version = "*"}
