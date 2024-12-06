@@ -346,6 +346,10 @@ async def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: str) 
     user_mention_markdown = user.mention_markdown_v2()
 
     # \ нужен из-за формата сообщений в маркдауне
+    tg_logger.warning(user_mention_markdown)
+    #user_mention_markdown = user_mention_markdown.replace("/[", "[")
+    #user_mention_markdown = user_mention_markdown.replace("]", "\]")
+    tg_logger.warning(message.replace("%USER\_MENTION%", user_mention_markdown))
     return message.replace("%USER\_MENTION%", user_mention_markdown)
 
 
@@ -361,11 +365,11 @@ async def _send_message_with_deletion(
 
     if reply_to is not None:
         sent_message = await reply_to.reply_text(
-            text=message_markdown, parse_mode=ParseMode.MARKDOWN
+            text=message_markdown, parse_mode=ParseMode.MARKDOWN_V2
         )
     else:
         sent_message = await context.bot.send_message(
-            chat_id, text=message_markdown, parse_mode=ParseMode.MARKDOWN
+            chat_id, text=message_markdown, parse_mode=ParseMode.MARKDOWN_V2
         )
 
     # correctly handle negative timeouts

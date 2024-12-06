@@ -1,3 +1,5 @@
+import re
+
 _texts = {
     "msg__set_new_message": "Обновил сообщение.",
     "msg__success_set_kick_timeout_response": "Обновил время до удаления.",
@@ -75,26 +77,31 @@ _texts = {
     "msg__skip_new_chat_member": "%SKIP%",
 }
 
+def escape_markdown(text):
+    """
+    Escapes special characters in a Markdown string to prevent Markdown rendering issues.
+    
+    Args:
+        text (str): The input string that may contain special Markdown characters.
+        
+    Returns:
+        str: A string with special Markdown characters escaped.
+    """
+    # Special characters in Markdown that need escaping
+    special_characters = r"([\\`*_{}\[\]()#+\-.!|>~^])"
+    return re.sub(special_characters, r"\\\1", text)
 
 def _(text):
     """
-    Retrieve a predefined message text based on a unique key.
-
-    The function looks up the input text in the predefined dictionary `_texts`,
-    which contains various messages used across the application. Each message
-    is associated with a unique key.
-
+    Retrieve and escape a predefined message text based on a unique key.
+    
     Args:
-        text (str): A unique key representing the desired message. This key
-                    should correspond to one of the keys in the `_texts`
-                    dictionary.
-
+        text (str): A unique key representing the desired message.
+        
     Returns:
-        str: The message text associated with the input key. If the key is not
-              found in the `_texts` dictionary, the function will return None.
-
-    Note:
-        It's important to ensure that the input key exists in the `_texts`
-        dictionary to avoid receiving a None result.
+        str: The escaped message text associated with the input key, or None if not found.
     """
-    return _texts.get(text)
+    raw_message = _texts.get(text)
+    if raw_message is not None:
+        return escape_markdown(raw_message)
+    return None
