@@ -32,9 +32,9 @@ log_config = {
     "disable_existing_loggers": False,
     "handlers": {
         "wachter_telegram": {
-            "class": "telegram_logger.TelegramHandler",
+            "class": "telegram_handler.TelegramHandler",
             "token": os.environ["TELEGRAM_TOKEN"],
-            "chat_ids": [os.environ["TELEGRAM_ERROR_CHAT_ID"]],
+            "chat_id": os.environ["TELEGRAM_ERROR_CHAT_ID"],
         },
         "wachter_oltp": {
             "class": "opentelemetry.sdk._logs.LoggingHandler",
