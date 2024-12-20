@@ -79,17 +79,27 @@ _texts = {
 
 def escape_markdown(text):
     """
-    Escapes special characters in a Markdown string to prevent Markdown rendering issues.
+    Escapes special characters in a Markdown string to prevent Markdown rendering issues,
+    excluding text within curly brackets.
     
     Args:
         text (str): The input string that may contain special Markdown characters.
         
     Returns:
-        str: A string with special Markdown characters escaped.
+        str: A string with special Markdown characters escaped, excluding text within curly brackets.
     """
-    # Special characters in Markdown that need escaping
-    special_characters = r"([\\`*_{}\[\]()#+\-.!|>~^])"
-    return re.sub(special_characters, r"\\\1", text)
+    # Regex to find text outside curly brackets
+    def escape_outside_braces(match):
+        text_outside = match.group(1)
+        if text_outside:
+            # Escape special characters in text outside curly brackets
+            special_characters = r"([\\`*_{}\[\]()#+\-.!|>~^])"
+            return re.sub(special_characters, r"\\\1", text_outside)
+        return match.group(0)
+    
+    # Match and process text outside curly brackets
+    escaped_text = re.sub(r"([^{}]+(?=\{)|(?<=\})([^{}]+)|^[^{]+|[^}]+$)", escape_outside_braces, text)
+    return escaped_text
 
 def _(text):
     """
