@@ -62,7 +62,11 @@ jobs:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           ROOT_DIR: /home/${{ secrets.DO_USER }}/${{ env.PACKAGE_LABEL }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           PERSISTENCE_DATABASE_URL: ${{ secrets.PERSISTENCE_DATABASE_URL }}
+          PERSISTENCE_DATABASE_USER: ${{ secrets.PERSISTENCE_DATABASE_USER }}
+          PERSISTENCE_DATABASE_PASSWORD: ${{ secrets.PERSISTENCE_DATABASE_PASSWORD }}
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_ERROR_CHAT_ID: ${{ secrets.TELEGRAM_ERROR_CHAT_ID }}
           TEAM_TELEGRAM_IDS: ${{ secrets.TEAM_TELEGRAM_IDS }}
@@ -73,14 +77,18 @@ jobs:
           passphrase: ${{ secrets.DO_SSH_KEY_PASSWORD }}
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT }}
-          envs: GITHUB_USERNAME, GITHUB_TOKEN, ROOT_DIR, DATABASE_URL, PERSISTENCE_DATABASE_URL, TELEGRAM_TOKEN, TEAM_TELEGRAM_IDS, UPTRACE_DSN
+          envs: GITHUB_USERNAME, GITHUB_TOKEN, ROOT_DIR, DATABASE_URL, PERSISTENCE_DATABASE_URL, TELEGRAM_TOKEN, TEAM_TELEGRAM_IDS, UPTRACE_DSN, DATABASE_USER, DATABASE_PASSWORD, PERSISTENCE_DATABASE_USER, PERSISTENCE_DATABASE_PASSWORD
           script: |
             export CR_PAT=${{ secrets.GH_PAT_READ_PACKAGE }}
             echo $CR_PAT | docker login  ghcr.io -u $GITHUB_USERNAME
             cd ${{ env.ROOT_DIR }}
             touch .env
             echo DATABASE_URL=${{ env.DATABASE_URL }} >> .env
+            echo DATABASE_USER=${{ env.DATABASE_USER }} >> .env
+            echo DATABASE_PASSWORD=${{ env.DATABASE_PASSWORD }} >> .env
             echo PERSISTENCE_DATABASE_URL=${{ env.PERSISTENCE_DATABASE_URL }} >> .env
+            echo PERSISTENCE_DATABASE_USER=${{ env.PERSISTENCE_DATABASE_USER }} >> .env
+            echo PERSISTENCE_DATABASE_PASSWORD=${{ env.PERSISTENCE_DATABASE_PASSWORD }} >> .env
             echo TELEGRAM_TOKEN=${{ env.TELEGRAM_TOKEN }} >> .env
             echo TELEGRAM_ERROR_CHAT_ID=${{ env.TELEGRAM_ERROR_CHAT_ID }} >> .env
             echo UPTRACE_DSN=${{ env.UPTRACE_DSN }} >> .env

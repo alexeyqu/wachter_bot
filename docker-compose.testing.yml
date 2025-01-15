@@ -15,6 +15,24 @@ services:
       - TEAM_TELEGRAM_IDS=${TEAM_TELEGRAM_IDS}
     restart: unless-stopped
 
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - ./backup/db.sql:/docker-entrypoint-initdb.d/backupfile.sql
+
+  postgres-persistence:
+    image: postgres
+    environment:
+      POSTGRES_DB: persistence-db
+      POSTGRES_USER: ${PERSISTENCE_DATABASE_USER}
+      POSTGRES_PASSWORD: ${PERSISTENCE_DATABASE_PASSWORD}
+    volumes:
+      - ./backup/db-persistence.sql:/docker-entrypoint-initdb.d/backupfile.sql
+
 networks:
   default:
     name: network-wachterbot-testing
