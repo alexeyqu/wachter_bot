@@ -1,5 +1,6 @@
 import asyncio
 from logging.config import fileConfig
+import os
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
@@ -26,7 +27,9 @@ target_metadata = None
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-
+config.set_main_option('sqlalchemy.url', os.environ.get(
+    "DATABASE_URL", "postgresql+asyncpg://user:password@wachter-db/db"
+))
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
