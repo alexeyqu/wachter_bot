@@ -1,4 +1,5 @@
 import json
+import time
 from typing import Iterator, Dict, List
 
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
@@ -92,6 +93,7 @@ async def get_chats_list(
         List[Dict[str, int]]: A list of dictionaries, each containing the 'title' and 'id'
         of a chat where the user has administrative or creator rights.
     """
+    time_start = time.time()
     async with session_scope() as session:  # Ensure this yields an AsyncSession object.
         result = await session.execute(select(User).filter(User.user_id == user_id))
         users = result.scalars().all()
@@ -105,6 +107,7 @@ async def get_chats_list(
             context.bot.logger.exception(
                 e
             )  # Ensure your CallbackContext has a logger configured.
+    tg_logger.info(f'get_chats_list time elapsed {time.time() - time_start}s')
     return chats_list
 
 
