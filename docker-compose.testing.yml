@@ -17,6 +17,8 @@ services:
 
   postgres:
     image: postgres
+    ports:
+      - 5433:5432
     environment:
       POSTGRES_DB: db
       POSTGRES_USER: ${DATABASE_USER}
@@ -26,6 +28,8 @@ services:
 
   postgres-persistence:
     image: postgres
+    ports:
+      - 5434:5432
     environment:
       POSTGRES_DB: persistence-db
       POSTGRES_USER: ${PERSISTENCE_DATABASE_USER}
