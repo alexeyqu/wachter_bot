@@ -5,6 +5,7 @@ from telegram.ext import CallbackContext
 from opentelemetry import metrics
 
 from src.constants import DEBUG, TEAM_TELEGRAM_IDS
+from src.model import Chat, User, session_scope
 
 
 def setup_counter(meter_name, counter_name, version="2.0.0"):
@@ -13,6 +14,10 @@ def setup_counter(meter_name, counter_name, version="2.0.0"):
     """
     meter = metrics.get_meter(meter_name, version=version)
     return meter.create_counter(counter_name, unit="1")
+
+def setup_histogram(meter_name, histogram_name, version="2.0.0"):
+    meter = metrics.get_meter(meter_name, version=version)
+    return meter.create_histogram(name=histogram_name)
 
 
 def admin(func):

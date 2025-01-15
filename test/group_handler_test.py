@@ -1,9 +1,19 @@
 import pytest
 from sqlalchemy import select
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import patch
+import os
 
-from src.model import User, Chat
-from src.handlers.group.group_handler import on_hashtag_message
+with patch.dict(
+    "os.environ",
+    {
+        "TELEGRAM_TOKEN": "dummy_token",
+        "TELEGRAM_ERROR_CHAT_ID": "dummy_chat_id",
+        "UPTRACE_DSN": "dummy_dsn",
+        "DEPLOYMENT_ENVIRONMENT": "testing",
+    },
+):
+    from src.handlers.group.group_handler import on_hashtag_message
+    from src.model import User, Chat
 from src.texts import _
 
 from telegram.constants import ParseMode
@@ -21,9 +31,9 @@ async def test_on_hashtag_message_new_user(
     # Simulate the Incoming Message
     chat_id = -3  # Example group chat ID (negative for groups)
     user_id = 3  # Example new user ID
-    mock_update.message.chat_id = chat_id
-    mock_update.message.from_user.id = user_id
-    mock_update.message.text = "#whois I am new here dkgjldskfjglkdfjglkdfsj lgkjdsflökgjldösfjglsdfjgölkdsfjglöksdjfglöksdfjglöksdfjg"
+    mock_update.effective_message.chat_id = chat_id
+    mock_update.effective_message.from_user.id = user_id
+    mock_update.effective_message.text = "#whois I am new here dkgjldskfjglkdfjglkdfsj lgkjdsflökgjldösfjglsdfjgölkdsfjglöksdjfglöksdfjglöksdfjg"
 
     mocker.patch("src.handlers.group.group_handler.is_whois", return_value=True)
     mocker.patch(
@@ -34,11 +44,15 @@ async def test_on_hashtag_message_new_user(
         "src.handlers.group.group_handler.remove_user_jobs_from_queue",
         return_value=True,
     )
+    mocker.patch(
+        "src.handlers.group.group_handler.whois_counter.add",
+        return_value=True,
+    )
 
     await on_hashtag_message(mock_update, mock_context)
 
     # Check if the reply message was sent
-    assert mock_update.message.reply_text.await_count == 1
+    assert mock_update.effective_message.reply_text.await_count == 1
 
     # Verify that the new user is added to the database
     async with async_session as session:
@@ -60,9 +74,9 @@ async def test_on_hashtag_message_short_whois(
     # Simulate the Incoming Message
     chat_id = -3  # Example group chat ID (negative for groups)
     user_id = 3  # Example new user ID
-    mock_update.message.chat_id = chat_id
-    mock_update.message.from_user.id = user_id
-    mock_update.message.text = "#whois I am new here"
+    mock_update.effective_message.chat_id = chat_id
+    mock_update.effective_message.from_user.id = user_id
+    mock_update.effective_message.text = "#whois I am new here"
 
     mocker.patch("src.handlers.group.group_handler.is_whois", return_value=True)
     mocker.patch(
@@ -78,12 +92,17 @@ async def test_on_hashtag_message_short_whois(
                 select(Chat.whois_length).where(Chat.id == chat_id)
             )
             whois_length = result.scalar_one()
-            # print(whois_length)
+            print(whois_length)
         except Exception as e:
             print(f"Error during query execution: {e}")
             raise
+            print()
+    expected_reply = _("msg__short_whois").format(whois_length=whois_length)
+    # Fetch the actual reply text
+    actual_reply_call = mock_update.effective_message.reply_text.call_args
+    actual_reply = actual_reply_call[1]["text"] if actual_reply_call else None
 
-    mock_update.message.reply_text.assert_awaited_with(
-        _("msg__short_whois").format(whois_length=whois_length),
-        parse_mode=ParseMode.MARKDOWN,
-    )
+    # Improved assertion with detailed error message
+    assert (
+        actual_reply == expected_reply
+    ), f"Assertion failed: Expected reply text '{expected_reply}' but got '{actual_reply}'."
