@@ -14,6 +14,9 @@ services:
       - DEPLOYMENT_ENVIRONMENT=testing
       - TEAM_TELEGRAM_IDS=${TEAM_TELEGRAM_IDS}
     restart: unless-stopped
+    networks:
+      - internal
+      - external
 
   postgres:
     image: postgres:alpine
@@ -34,6 +37,8 @@ services:
       interval: 5s
       timeout: 2s
       retries: 3
+    networks:
+      - internal
 
   postgres-persistence:
     image: postgres:alpine
@@ -54,6 +59,8 @@ services:
       interval: 5s
       timeout: 2s
       retries: 3
+    networks:
+      - internal
 
 volumes:
   volume-db:
@@ -62,5 +69,7 @@ volumes:
   postgres-persistence-data:
 
 networks:
-  default:
+  external:
     name: network-wachterbot-testing
+  internal:
+    internal: true
