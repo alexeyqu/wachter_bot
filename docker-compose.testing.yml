@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  wachterbot:
+  wachterbot-testing:
     container_name: wachterbot-testing
     image: ghcr.io/alexeyqu/wachter_bot/wachterbot:testing
     environment:
@@ -14,18 +14,15 @@ services:
       - DEPLOYMENT_ENVIRONMENT=testing
       - TEAM_TELEGRAM_IDS=${TEAM_TELEGRAM_IDS}
     restart: unless-stopped
-    networks:
-      - internal
-      - external
 
-  postgres:
+  postgres-testing:
     image: postgres:alpine
     restart: always
     ports:
       - 5433:5432
     environment:
       POSTGRES_DB: db
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: postgres-testing
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
     volumes:
@@ -37,17 +34,15 @@ services:
       interval: 5s
       timeout: 2s
       retries: 3
-    networks:
-      - internal
 
-  postgres-persistence:
+  postgres-persistence-testing:
     image: postgres:alpine
     restart: always
     ports:
       - 5434:5432
     environment:
       POSTGRES_DB: persistence-db
-      POSTGRES_HOST: postgres-persistence
+      POSTGRES_HOST: postgres-persistence-testing
       POSTGRES_USER: ${PERSISTENCE_DATABASE_USER}
       POSTGRES_PASSWORD: ${PERSISTENCE_DATABASE_PASSWORD}
     volumes:
@@ -59,8 +54,6 @@ services:
       interval: 5s
       timeout: 2s
       retries: 3
-    networks:
-      - internal
 
 volumes:
   volume-db:
@@ -69,7 +62,5 @@ volumes:
   postgres-persistence-data:
 
 networks:
-  external:
+  default:
     name: network-wachterbot-testing
-  internal:
-    internal: true
