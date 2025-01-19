@@ -352,7 +352,11 @@ async def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: str) 
     #user_mention_markdown = user_mention_markdown.replace("]", "\]")
     # wtf
     tg_logger.warning(message.replace("%USER\\\\\\_MENTION%", user_mention_markdown))
-    return message.replace("%USER\\\\\\_MENTION%", user_mention_markdown)
+    message_mention = message.replace("%USER\\\\\\_MENTION%", user_mention_markdown)
+    message_mention = message_mention.replace("%USER\\\\_MENTION%", user_mention_markdown)
+    message_mention = message_mention.replace("%USER\\_MENTION%", user_mention_markdown)
+    message_mention = message_mention.replace("%USER_MENTION%", user_mention_markdown)
+    return message_mention
 
 
 async def _send_message_with_deletion(
