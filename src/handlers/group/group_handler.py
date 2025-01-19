@@ -64,7 +64,8 @@ async def on_new_chat_members(
     for user_id in user_ids:
         for job in context.job_queue.jobs():
             if (
-                job.data.get("user_id") == user_id
+                job.data
+                and job.data.get("user_id") == user_id
                 and job.data.get("chat_id") == chat_id
             ):
                 job.schedule_removal()
@@ -157,7 +158,7 @@ async def remove_user_jobs_from_queue(context, user_id, chat_id):
     """
     removed = False
     for job in context.job_queue.jobs():
-        if job.data.get("user_id") == user_id and job.data.get("chat_id") == chat_id:
+        if job.data and job.data.get("user_id") == user_id and job.data.get("chat_id") == chat_id:
             if "message_id" in job.data:
                 try:
                     await context.bot.delete_message(
