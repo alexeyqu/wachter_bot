@@ -32,7 +32,6 @@ config.set_main_option('sqlalchemy.url', os.environ.get(
     "DATABASE_URL", "postgresql+asyncpg://user:password@wachter-db/db"
 ))
 
-
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
