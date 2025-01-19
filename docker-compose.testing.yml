@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  wachterbot:
+  wachterbot-testing:
     container_name: wachterbot-testing
     image: ghcr.io/alexeyqu/wachter_bot/wachterbot:testing
     environment:
@@ -14,6 +14,52 @@ services:
       - DEPLOYMENT_ENVIRONMENT=testing
       - TEAM_TELEGRAM_IDS=${TEAM_TELEGRAM_IDS}
     restart: unless-stopped
+
+  postgres-testing:
+    image: postgres:alpine
+    restart: always
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_HOST: postgres-testing
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - volume-db:/data/db
+      - postgres-data:/var/lib/postgresql/data
+      - ./backup/db.sql:/docker-entrypoint-initdb.d/backupfile.sql
+    healthcheck:
+      test: pg_isready -U ${DATABASE_USER} -d db
+      interval: 5s
+      timeout: 2s
+      retries: 3
+
+  postgres-persistence-testing:
+    image: postgres:alpine
+    restart: always
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_DB: persistence-db
+      POSTGRES_HOST: postgres-persistence-testing
+      POSTGRES_USER: ${PERSISTENCE_DATABASE_USER}
+      POSTGRES_PASSWORD: ${PERSISTENCE_DATABASE_PASSWORD}
+    volumes:
+      - volume-persistence-db:/data/db
+      - postgres-persistence-data:/var/lib/postgresql/data
+      - ./backup/db-persistence.sql:/docker-entrypoint-initdb.d/backupfile.sql
+    healthcheck:
+      test: pg_isready -U ${PERSISTENCE_DATABASE_USER} -d persistence-db
+      interval: 5s
+      timeout: 2s
+      retries: 3
+
+volumes:
+  volume-db:
+  postgres-data:
+  volume-persistence-db:
+  postgres-persistence-data:
 
 networks:
   default:

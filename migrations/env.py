@@ -27,6 +27,7 @@ target_metadata = None
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
 config.set_main_option('sqlalchemy.url', os.environ.get(
     "DATABASE_URL", "postgresql+asyncpg://user:password@wachter-db/db"
 ))
