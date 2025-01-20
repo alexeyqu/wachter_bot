@@ -344,7 +344,7 @@ async def _mention_markdown(bot: Bot, chat_id: int, user_id: int, message: str) 
     #        # если пользователь удален, у него пропадает имя и markdown выглядит так: (tg://user?id=666)
     #        user_mention_markdown = ""
     #    else:
-    user_mention_markdown = user.mention_markdown_v2()
+    user_mention_markdown = user.mention_markdown()
 
     # \ нужен из-за формата сообщений в маркдауне
     tg_logger.warning(user_mention_markdown)
@@ -371,11 +371,11 @@ async def _send_message_with_deletion(
 
     if reply_to is not None:
         sent_message = await reply_to.reply_text(
-            text=message_markdown, parse_mode=ParseMode.MARKDOWN_V2
+            text=message_markdown, parse_mode=ParseMode.MARKDOWN
         )
     else:
         sent_message = await context.bot.send_message(
-            chat_id, text=message_markdown, parse_mode=ParseMode.MARKDOWN_V2
+            chat_id, text=message_markdown, parse_mode=ParseMode.MARKDOWN
         )
 
     # correctly handle negative timeouts
