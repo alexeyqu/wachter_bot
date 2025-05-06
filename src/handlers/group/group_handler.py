@@ -16,14 +16,13 @@ from src.handlers.utils import setup_counter, setup_histogram
 new_member_counter = setup_counter("new_member.meter", "new_member_counter")
 whois_counter = setup_counter("new_whois.meter", "new_whois_counter")
 ban_counter = setup_counter("ban.meter", "ban_counter")
+chats_histogram = setup_histogram("chats.meter", "chats_counter")
+users_histogram = setup_histogram("users.meter", "users_counter")
+unique_users_histogram = setup_histogram(
+    "unique_users.meter", "unique_users_counter"
+)
 
-
-async def db_metrics_reader_helper(context: ContextTypes.DEFAULT_TYPE):
-    chats_histogram = setup_histogram("chats.meter", "chats_counter")
-    users_histogram = setup_histogram("users.meter", "users_counter")
-    unique_users_histogram = setup_histogram(
-        "unique_users.meter", "unique_users_counter"
-    )
+async def db_metrics_reader_helper():
     async with session_scope() as sess:
         # Number of chats
         result = await sess.execute(select(func.count(Chat.id)))
@@ -54,9 +53,6 @@ async def on_new_chat_members(
     """
     chat_id = update.message.chat_id
     new_member_counter.add(1, {"chat_id": chat_id})
-    context.job_queue.run_repeating(
-        db_metrics_reader_helper, 3600, name="metrics_exporter"
-    )
     user_ids = [
         new_chat_member.id for new_chat_member in update.message.new_chat_members
     ]
